@@ -8,10 +8,10 @@ CFLAGS=-I. -g -Wall
 LIBS=-lm
 
 #Cabeçalhos
-DEPS= matrix.h	
+DEPS= matrix.h vector.h
 
 #OBJ= arquivos.c main.o 
-OBJ= main.o matrix.o
+OBJ= main.o matrix.o vector.o
 
 %.o: %.c $(DEPS)		
 	@$(CC) -c -o $@ $< $(CFLAGS)
