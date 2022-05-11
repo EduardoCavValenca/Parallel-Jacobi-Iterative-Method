@@ -29,7 +29,10 @@ void populate_matrix(v_type** matrix, unsigned int seed, int range, int rows, in
 
     for (i = 0; i < rows ; i++){
         for (j = 0; j < cols ; j++){
-            matrix[i][j] = (float)rand()/(float)(RAND_MAX/range);
+            if(i == j)
+                matrix[i][j] = rows*range + (float)rand()/(float)(RAND_MAX/range); //Converge
+            else
+                matrix[i][j] = (float)rand()/(float)(RAND_MAX/range);
         }
     }
 }

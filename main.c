@@ -3,7 +3,7 @@
 #include "jacobi.h"
 
 #define RANGE 1
-#define TOLERANCE 0.0001
+#define TOLERANCE 0.000001
 
 int main(){
     
