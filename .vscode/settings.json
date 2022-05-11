@@ -1,6 +1,10 @@
 {
     "files.associations": {
         "matrix.h": "c",
-        "vector.h": "c"
+        "vector.h": "c",
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "jacobi.h": "c",
+        "stdbool.h": "c"
     }
 }
