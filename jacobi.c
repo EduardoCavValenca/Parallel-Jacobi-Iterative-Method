@@ -32,7 +32,7 @@ bool iterate(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length,
     }
 
     for(i= 0 ; i < length ; i++)
-        printf("%f-%f   ",vec_solution[i],change[i]);
+        printf("%lf-%lf   ",vec_solution[i],change[i]);
 
     printf("\n");
 
@@ -63,7 +63,7 @@ void verify_method(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int l
             sum += matrix_A[i][j]*vec_solution[j];
         }
         diff = fabs(sum - vec_B[i]);
-        printf("%f ", diff);
+        printf("%lf ", diff);
     }
     printf("\n\n");
 

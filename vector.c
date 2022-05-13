@@ -30,7 +30,7 @@ void print_vector(v_type* vector, int length){
     int i;
 
     for (i = 0; i < length ; i++)
-        printf("%f ", vector[i]);
+        printf("%lf ", vector[i]);
 
     printf("\n\n");
     

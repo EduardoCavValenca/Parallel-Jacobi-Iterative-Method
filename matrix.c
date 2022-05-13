@@ -46,7 +46,7 @@ void print_matrix(v_type** matrix, int rows, int cols){
     
     for (i = 0; i < rows ; i++){
         for (j = 0; j < cols ; j++){
-            printf("%f ",matrix[i][j]);
+            printf("%lf ",matrix[i][j]);
         }
         printf("\n");
     }
