@@ -1,6 +1,8 @@
 #include "matrix.h"
 
 v_type** create_matrix(int rows, int cols){
+    //Allocate matrix in heap
+
     v_type** matrix;
     matrix = (v_type **)malloc(rows * sizeof(v_type*));
 
@@ -13,6 +15,7 @@ v_type** create_matrix(int rows, int cols){
 }
 
 void delete_matrix(v_type** matrix, int rows, int cols){
+    //free matrix memory in heap
 
     int i;
     for(i = 0; i < rows; i++) 
@@ -23,16 +26,16 @@ void delete_matrix(v_type** matrix, int rows, int cols){
 
 
 void populate_matrix(v_type** matrix, unsigned int seed, int range, int rows, int cols ){
-    srand(seed);
+    srand(seed); //Define seed
 
     int i,j;
 
     for (i = 0; i < rows ; i++){
         for (j = 0; j < cols ; j++){
             if(i == j)
-                matrix[i][j] = rows*range + (float)rand()/(float)(RAND_MAX/range); //Converge
+                matrix[i][j] = rows*range + (float)rand()/(float)(RAND_MAX/range); //Converging requirement
             else
-                matrix[i][j] = (float)rand()/(float)(RAND_MAX/range);
+                matrix[i][j] = (float)rand()/(float)(RAND_MAX/range); //random floating numbers between 0 and range
         }
     }
 }
