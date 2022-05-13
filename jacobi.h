@@ -2,9 +2,6 @@
 #define JACOBI
 
 #include "common.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 
 void initial_approximation(v_type* vec_solution, int length);
 bool iterate(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length, v_type tolerance);

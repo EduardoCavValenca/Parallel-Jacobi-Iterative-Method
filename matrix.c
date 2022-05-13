@@ -29,14 +29,17 @@ void populate_matrix(v_type** matrix, unsigned int seed, int range, int rows, in
     srand(seed); //Define seed
 
     int i,j;
+    v_type line_sum;
 
     for (i = 0; i < rows ; i++){
+        line_sum = 0;
         for (j = 0; j < cols ; j++){
-            if(i == j)
-                matrix[i][j] = rows*range + (float)rand()/(float)(RAND_MAX/range); //Converging requirement
-            else
+            if(i != j){
                 matrix[i][j] = (float)rand()/(float)(RAND_MAX/range); //random floating numbers between 0 and range
+                line_sum += fabs(matrix[i][j]);
+            }
         }
+        matrix[i][i] = line_sum + (float)rand()/(float)(RAND_MAX/range); //Converging requirement
     }
 }
 

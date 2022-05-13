@@ -2,8 +2,7 @@
 #define MATRIX
 
 #include "common.h"
-#include <stdlib.h>
-#include <stdio.h>
+
 
 v_type** create_matrix(int rows, int cols);
 void delete_matrix(v_type** matrix, int rows, int cols);
