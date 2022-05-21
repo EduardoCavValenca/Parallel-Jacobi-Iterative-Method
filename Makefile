@@ -16,14 +16,14 @@ OBJ= main.o matrix.o vector.o jacobi.o
 %.o: %.c $(DEPS)		
 	@$(CC) -c -o $@ $< $(CFLAGS)
 
-jacobipar: $(OBJ)
+jacobiseq: $(OBJ)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 run:
-	@./jacobipar
+	@./jacobiseq
 
 clean:
-	@rm -f *.o  jacobipar
+	@rm -f *.o  jacobiseq
 
 debug:
-	gdb ./jacobipar
+	gdb ./jacobiseq

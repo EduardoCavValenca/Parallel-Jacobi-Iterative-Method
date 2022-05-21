@@ -31,6 +31,7 @@ bool iterate(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length,
     //Diference between value of past and new generation, stop condition
     v_type change[length];
     v_type new_value;
+    
 
     /* ----------- Verifying the stop condition ---------------- */
     for(i= 0 ; i < length ; i++)
