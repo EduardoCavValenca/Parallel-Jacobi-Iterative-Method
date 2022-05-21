@@ -1,5 +1,5 @@
-#ifndef JACOBI
-#define JACOBI
+#ifndef JACOBISEQ
+#define JACOBISEQ
 
 #include "common.h"
 

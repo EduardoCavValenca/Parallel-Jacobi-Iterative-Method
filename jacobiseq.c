@@ -1,4 +1,4 @@
-#include "jacobi.h"
+#include "jacobiseq.h"
 
 void initial_approximation(v_type* vec_solution, int length){
     //Starting guess, current 0, 0, 0... 0 

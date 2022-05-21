@@ -1,6 +1,6 @@
 #include "matrix.h"
 #include "vector.h"
-#include "jacobi.h"
+#include "jacobiseq.h"
 
 #define RANGE 1
 #define TOLERANCE 0.000001
