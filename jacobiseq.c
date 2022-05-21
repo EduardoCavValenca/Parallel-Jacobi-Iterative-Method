@@ -33,10 +33,11 @@ bool iterate(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length,
     v_type new_value;
     
 
-    /* ----------- Verifying the stop condition ---------------- */
+    
+    //Applying the Jacobi method
     for(i= 0 ; i < length ; i++)
     {
-        new_value = (vec_B[i] - sum[i])/matrix_A[i][i]; //Jacobi Method
+        new_value = (vec_B[i] - sum[i])/matrix_A[i][i]; //Jacobi Equation
         change[i] = fabs(vec_solution[i] - new_value);
         vec_solution[i] = new_value; //updates value
     }
@@ -46,6 +47,8 @@ bool iterate(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length,
 
     printf("\n");
 
+    /* ----------- Verifying the stop condition ---------------- */
+    
     v_type max = FLT_MIN; //Maximum change of this iteration
 
     for(i= 0 ; i < length ; i++) 
