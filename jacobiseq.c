@@ -1,6 +1,6 @@
 #include "jacobiseq.h"
 
-bool iterate_seq(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length, v_type tolerance){
+bool iterate_seq(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length, v_type tolerance, int LOG){
     int i,j;
 
     v_type sum[length]; //Get line sum of Ax excluding Aii
@@ -32,10 +32,12 @@ bool iterate_seq(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int len
         vec_solution[i] = new_value; //updates value
     }
 
-    for(i= 0 ; i < length ; i++)
-        printf("%lf-%lf   ",vec_solution[i],change[i]);
+    if (LOG){
+        for(i= 0 ; i < length ; i++)
+            printf("%lf-%lf   ",vec_solution[i],change[i]);
 
-    printf("\n");
+        printf("\n");
+    }
 
     /* ----------- Verifying the stop condition ---------------- */
     
