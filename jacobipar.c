@@ -7,6 +7,7 @@ bool iterate_par(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int len
     v_type sum[length]; //Get line sum of Ax excluding Aii
 
     //For each line
+    //#pragma omp parallel for default(shared) firstprivate(soma) num_threads(T)
     for(i=0; i < length; i++){ 
         sum[i] = 0;
 

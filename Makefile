@@ -1,11 +1,11 @@
 #Compilador
-CC=gcc
+CC=gcc -fopenmp
 
 #Flags de compilação
 CFLAGS=-I. -g -Wall
 
 #Bibliotecas usadas
-LIBS=-lm
+LIBS= -lm
 
 #Cabeçalhos
 DEPS= matrix.h vector.h jacobi.h jacobipar.h jacobiseq.h common.h

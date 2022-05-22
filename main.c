@@ -5,7 +5,7 @@
 #include "jacobipar.h"
 
 #define RANGE 1
-#define TOLERANCE 0.000001
+#define TOLERANCE 0.0001
 
 int main(){
     
