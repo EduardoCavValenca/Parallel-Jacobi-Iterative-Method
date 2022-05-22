@@ -1,6 +1,7 @@
-#include "jacobiseq.h"
+#include "jacobipar.h"
 
-bool iterate_seq(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length, v_type tolerance){
+
+bool iterate_par(v_type** matrix_A, v_type* vec_B, v_type* vec_solution, int length, v_type tolerance){
     int i,j;
 
     v_type sum[length]; //Get line sum of Ax excluding Aii

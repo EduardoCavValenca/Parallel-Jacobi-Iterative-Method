@@ -1,6 +1,8 @@
 #include "matrix.h"
 #include "vector.h"
+#include "jacobi.h"
 #include "jacobiseq.h"
+#include "jacobipar.h"
 
 #define RANGE 1
 #define TOLERANCE 0.000001
@@ -44,7 +46,7 @@ int main(){
     int iteration_counter = 0;
 
     //Iterating while the tolerance is not reached
-    while(iterate(matrix_A,vec_B,vec_solution, N, TOLERANCE)) //while there is substantial improvement (> tolerance)
+    while(iterate_seq(matrix_A,vec_B,vec_solution, N, TOLERANCE)) //while there is substantial improvement (> tolerance)
         iteration_counter += 1;
     
     /* Presenting the results */
