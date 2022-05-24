@@ -2,7 +2,7 @@
 CC=gcc -fopenmp
 
 #Flags de compilação
-CFLAGS=-I. -g -Wall
+CFLAGS=-I. -g -Wall -O3 -Ofast -march=native
 
 #Bibliotecas usadas
 LIBS= -lm

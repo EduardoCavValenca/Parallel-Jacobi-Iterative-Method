@@ -35,11 +35,11 @@ void populate_matrix(v_type** matrix, unsigned int seed, int range, int rows, in
         line_sum = 0;
         for (j = 0; j < cols ; j++){
             if(i != j){
-                matrix[i][j] = (float)rand()/(float)(RAND_MAX/range); //random floating numbers between 0 and range
+                matrix[i][j] = (double)rand()/(double)(RAND_MAX/range); //random floating numbers between 0 and range
                 line_sum += fabs(matrix[i][j]);
             }
         }
-        matrix[i][i] = line_sum + (float)rand()/(float)(RAND_MAX/range); //Converging requirement
+        matrix[i][i] = line_sum + (double)rand()/(double)(RAND_MAX/range); //Converging requirement
     }
 }
 

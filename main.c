@@ -4,8 +4,8 @@
 #include "jacobiseq.h"
 #include "jacobipar.h"
 
-#define RANGE 1
-#define TOLERANCE 0.0001
+#define RANGE 1.0
+#define TOLERANCE 1e-5
 #define LOG 0
 
 int main(){
@@ -19,7 +19,7 @@ int main(){
     v_type * vec_solution = create_vector(N);
 
     double start_time_matrix = omp_get_wtime();
-    populate_matrix(matrix_A,3,RANGE,N,N); //Pseudorandom number generation
+    populate_matrix(matrix_A, 69420 , RANGE, N, N); //Pseudorandom number generation
     double time_matrix = omp_get_wtime() - start_time_matrix;
 
     //Check if solution is able to converge with Jacobi method
@@ -30,7 +30,7 @@ int main(){
     }
 
     //Pseudorandom number generation
-    populate_vector(vec_B,5,RANGE,N); 
+    populate_vector(vec_B, 69420, RANGE, N); 
 
     /*Presenting initial values*/
     if(LOG){
@@ -48,7 +48,7 @@ int main(){
         printf("Solution (Current - Difference): \n");
     
     //Starting the jacobi method
-    int iteration_counter = 0;
+    int iteration_counter = 1;
 
 
     double start_time_iter = omp_get_wtime();
@@ -70,6 +70,7 @@ int main(){
 
     printf("Time taken build matrix: %lf\n\n", time_matrix);
     printf("Time taken iterating: %lf\n\n", time_iter);
+    printf("Number of Iterations: %d\n\n", iteration_counter);
 
     //Free memory
     delete_matrix(matrix_A,N,N); 
