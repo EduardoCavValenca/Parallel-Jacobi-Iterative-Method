@@ -1,21 +1,22 @@
 #Compilador
-CC=gcc -fopenmp
+CC = gcc 
 
 #Flags de compilação
-CFLAGS=-I. -g -Wall -O3 -Ofast -march=native
+CFLAGS = -fopenmp -I. -g -Wall -O3 -Ofast -march=native
 
 #Bibliotecas usadas
-LIBS= -lm
+LIBS = -lm
 
 #Cabeçalhos
 #DEPS=
 
-#OBJ= arquivos.c main.o 
-OBJ_par= jacobipar.o
-OBJ_seq = jacobiseq.o
+#OBJ= arquivos.c main.o
+OBJ_par = jacobipar.c
+OBJ_seq = jacobiseq.c
 
-%.o: %.c $(DEPS)		
-	@$(CC) -c -o $@ $< $(CFLAGS)
+all: 
+	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS)
+	@$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS)
 
 jacobipar: $(OBJ_par)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
@@ -33,7 +34,7 @@ run_jacobipar:
 	./jacobipar $${SIZE} $${TRED};
 
 clean:
-	@rm -f *.o  jacobiseq
+	@rm -f *.o jacobiseq jacobipar
 
 debug:
 	gdb ./jacobiseq
