@@ -1,3 +1,10 @@
 make --dry-run --keep-going --print-directory
-/bin/sh: 1: make: not found
-
+make: Entering directory '/mnt/c/Users/marco/Desktop/Alto desempenho/Parallel-Jacobi-Iterative-Method'
+gcc -c -o main.o main.c -I. -g -Wall
+ 
+gcc -c -o matrix.o matrix.c -I. -g -Wall
+gcc -c -o vector.o vector.c -I. -g -Wall
+gcc -c -o jacobi.o jacobi.c -I. -g -Wall
+gcc -o jacobiseq main.o matrix.o vector.o jacobi.o -I. -g -Wall -lm
+make: Leaving directory '/mnt/c/Users/marco/Desktop/Alto desempenho/Parallel-Jacobi-Iterative-Method'
+ 
