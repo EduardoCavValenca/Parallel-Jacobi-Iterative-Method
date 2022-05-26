@@ -17,12 +17,12 @@ void delete_vector(v_type* vector){
 
 
 void populate_vector(v_type* vector, unsigned int seed, int range, int length){
-    srand(seed);//Define seed
+    //srand(seed);//Define seed
 
     int i;
 
     for (i = 0; i < length ; i++)
-        vector[i] = (float)rand()/(float)(RAND_MAX/range); //random floating numbers between 0 and range
+        vector[i] = (double)rand()/(double)(RAND_MAX/range); //random floating numbers between 0 and range
 }
 
 void print_vector(v_type* vector, int length){

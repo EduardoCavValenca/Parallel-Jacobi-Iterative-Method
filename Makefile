@@ -1,17 +1,17 @@
 #Compilador
-CC=gcc
+CC=gcc -fopenmp
 
 #Flags de compilação
-CFLAGS=-I. -g -Wall
+CFLAGS=-I. -g -Wall -O3 -Ofast -march=native
 
 #Bibliotecas usadas
-LIBS=-lm
+LIBS= -lm
 
 #Cabeçalhos
-DEPS= matrix.h vector.h jacobi.h common.h
+DEPS= matrix.h vector.h jacobi.h jacobipar.h jacobiseq.h common.h
 
 #OBJ= arquivos.c main.o 
-OBJ= main.o matrix.o vector.o jacobi.o
+OBJ= main.o matrix.o vector.o jacobi.o jacobipar.o jacobiseq.o
 
 %.o: %.c $(DEPS)		
 	@$(CC) -c -o $@ $< $(CFLAGS)

@@ -1,9 +1,12 @@
 #include "matrix.h"
 #include "vector.h"
 #include "jacobi.h"
+#include "jacobiseq.h"
+#include "jacobipar.h"
 
-#define RANGE 1
-#define TOLERANCE 0.000001
+#define RANGE 1.0
+#define TOLERANCE 1e-5
+#define LOG 0
 
 int main(){
     
@@ -15,7 +18,9 @@ int main(){
     v_type * vec_B = create_vector(N);
     v_type * vec_solution = create_vector(N);
 
-    populate_matrix(matrix_A,3,RANGE,N,N); //Pseudorandom number generation
+    double start_time_matrix = omp_get_wtime();
+    populate_matrix(matrix_A, 69420 , RANGE, N, N); //Pseudorandom number generation
+    double time_matrix = omp_get_wtime() - start_time_matrix;
 
     //Check if solution is able to converge with Jacobi method
     if(!check_if_possible(matrix_A,N))
@@ -25,34 +30,47 @@ int main(){
     }
 
     //Pseudorandom number generation
-    populate_vector(vec_B,5,RANGE,N); 
+    populate_vector(vec_B, 69420, RANGE, N); 
 
     /*Presenting initial values*/
-    printf("Matrix: \n");
-    print_matrix(matrix_A,N,N);
+    if(LOG){
+        printf("Matrix: \n");
+        print_matrix(matrix_A,N,N);
 
-    printf("Target Vector: \n");
-    print_vector(vec_B,N);
+        printf("Target Vector: \n");
+        print_vector(vec_B,N);
+    }
 
     //Starting guess, current 0, 0, 0... 0
     initial_approximation(vec_solution,N); 
 
-
-    printf("Solution (Current - Difference): \n");
+    if(LOG)
+        printf("Solution (Current - Difference): \n");
     
     //Starting the jacobi method
-    int iteration_counter = 0;
+    int iteration_counter = 1;
+
+
+    double start_time_iter = omp_get_wtime();
 
     //Iterating while the tolerance is not reached
-    while(iterate(matrix_A,vec_B,vec_solution, N, TOLERANCE)) //while there is substantial improvement (> tolerance)
+    while(iterate_par(matrix_A,vec_B,vec_solution, N, TOLERANCE, LOG)) //while there is substantial improvement (> tolerance)
         iteration_counter += 1;
+
+    double time_iter = omp_get_wtime() - start_time_iter;
     
     /* Presenting the results */
-    printf("\nSolution: (%d iterations)\n",iteration_counter);
-    print_vector(vec_solution,N); //Final solution
+    if (LOG){
+        printf("\nSolution: (%d iterations)\n",iteration_counter);
+        print_vector(vec_solution,N); //Final solution
 
-    printf("Diference from target: \n"); //Diference between Ax and b where (Ax = b)
-    verify_method(matrix_A,vec_B,vec_solution, N);
+        printf("Diference from target: \n"); //Diference between Ax and b where (Ax = b)
+        verify_method(matrix_A,vec_B,vec_solution, N);
+    }
+
+    printf("Time taken build matrix: %lf\n\n", time_matrix);
+    printf("Time taken iterating: %lf\n\n", time_iter);
+    printf("Number of Iterations: %d\n\n", iteration_counter);
 
     //Free memory
     delete_matrix(matrix_A,N,N); 
