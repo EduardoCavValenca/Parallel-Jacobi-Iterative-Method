@@ -35,15 +35,22 @@ debug:
 
 #Configurate connection to server
 USER = ssc903-ta-g07
-PSSW = "TwkVZe"
 PORT = 2210
 LASDPC_IP=andromeda.lasdpc.icmc.usp.br
-FILES = jacobi.c
+JACSEQ = jacobiseq
+JACPAR = jacobipar
+
+ARQ := password.txt
+PSSW := $(shell cat ${ARQ})
 
 .PHONY: connect
 connect:
 	sshpass -p $(PSSW) ssh $(USER)@$(LASDPC_IP) -p $(PORT)
 
-.PHONY: send
-send:
-	sshpass -p $(PSSW) scp -P $(PORT) $(FILES) $(USER)@$(LASDPC_IP):/home/$(USER)/
+.PHONY: send_seq
+send_seq:
+	sshpass -p $(PSSW) scp -P $(PORT) $(JACSEQ) $(USER)@$(LASDPC_IP):/home/$(USER)/
+
+.PHONY: send_par
+send_par:
+	sshpass -p $(PSSW) scp -P $(PORT) $(JACPAR) $(USER)@$(LASDPC_IP):/home/$(USER)/
