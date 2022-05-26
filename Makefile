@@ -16,12 +16,17 @@ OBJ= main.o matrix.o vector.o jacobi.o jacobipar.o jacobiseq.o
 %.o: %.c $(DEPS)		
 	@$(CC) -c -o $@ $< $(CFLAGS)
 
-jacobiseq: $(OBJ)
+compile: $(OBJ)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
-run:
-	@./jacobiseq
+run_jacobiseq:
+	read ""
+	./jacobiseq
 
+run_jacobipar:
+	@read -p "Insira a dimensao da matriz N: " SIZE
+	@read -p "Insira a quantidade de threads T: " TRED
+	./jacobipar $SIZE TRED
 clean:
 	@rm -f *.o  jacobiseq
 
