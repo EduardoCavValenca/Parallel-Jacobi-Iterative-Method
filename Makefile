@@ -8,25 +8,30 @@ CFLAGS=-I. -g -Wall -O3 -Ofast -march=native
 LIBS= -lm
 
 #Cabeçalhos
-DEPS= matrix.h vector.h jacobi.h jacobipar.h jacobiseq.h common.h
+#DEPS=
 
 #OBJ= arquivos.c main.o 
-OBJ= main.o matrix.o vector.o jacobi.o jacobipar.o jacobiseq.o
+OBJ_par= jacobipar.o
+OBJ_seq = jacobiseq.o
 
 %.o: %.c $(DEPS)		
 	@$(CC) -c -o $@ $< $(CFLAGS)
 
-compile: $(OBJ)
-	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+jacobipar: $(OBJ_par)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+jacobiseq: $(OBJ_seq)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 run_jacobiseq:
-	read ""
-	./jacobiseq
+	@read -p "Insira a dimensao da matriz N: " SIZE; \
+	./jacobiseq $${SIZE};
 
 run_jacobipar:
-	@read -p "Insira a dimensao da matriz N: " SIZE
-	@read -p "Insira a quantidade de threads T: " TRED
-	./jacobipar $SIZE TRED
+	@read -p "Insira a dimensao da matriz N: " SIZE; \
+	read -p "Insira a quantidade de threads T: " TRED; \
+	./jacobipar $${SIZE} $${TRED};
+
 clean:
 	@rm -f *.o  jacobiseq
 
@@ -37,9 +42,6 @@ debug:
 USER = ssc903-ta-g07
 PORT = 2210
 LASDPC_IP=andromeda.lasdpc.icmc.usp.br
-JACSEQ = jacobiseq
-JACPAR = jacobipar
-
 ARQ := password.txt
 PSSW := $(shell cat ${ARQ})
 
@@ -49,8 +51,8 @@ connect:
 
 .PHONY: send_seq
 send_seq:
-	sshpass -p $(PSSW) scp -P $(PORT) $(JACSEQ) $(USER)@$(LASDPC_IP):/home/$(USER)/
+	sshpass -p $(PSSW) scp -P $(PORT) jacobiseq Makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
 
 .PHONY: send_par
 send_par:
-	sshpass -p $(PSSW) scp -P $(PORT) $(JACPAR) $(USER)@$(LASDPC_IP):/home/$(USER)/
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar Makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
