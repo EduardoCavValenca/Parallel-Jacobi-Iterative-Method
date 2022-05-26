@@ -27,3 +27,18 @@ clean:
 
 debug:
 	gdb ./jacobiseq
+
+#Configurate connection to server
+USER = ssc903-ta-g07
+PSSW = "TwkVZe"
+PORT = 2210
+LASDPC_IP=andromeda.lasdpc.icmc.usp.br
+FILES = jacobi.c
+
+.PHONY: connect
+connect:
+	sshpass -p $(PSSW) ssh $(USER)@$(LASDPC_IP) -p $(PORT)
+
+.PHONY: send
+send:
+	sshpass -p $(PSSW) scp -P $(PORT) $(FILES) $(USER)@$(LASDPC_IP):/home/$(USER)/
