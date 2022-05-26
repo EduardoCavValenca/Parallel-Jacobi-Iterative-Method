@@ -18,10 +18,10 @@ OBJ_seq = jacobiseq.o
 	@$(CC) -c -o $@ $< $(CFLAGS)
 
 jacobipar: $(OBJ_par)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 jacobiseq: $(OBJ_seq)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 run_jacobiseq:
 	@read -p "Insira a dimensao da matriz N: " SIZE; \
@@ -49,10 +49,14 @@ PSSW := $(shell cat ${ARQ})
 connect:
 	sshpass -p $(PSSW) ssh $(USER)@$(LASDPC_IP) -p $(PORT)
 
+.PHONY: send_all
+send_all:
+	sshpass -p $(PSSW) scp -P $(PORT) *.c makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+
 .PHONY: send_seq
 send_seq:
-	sshpass -p $(PSSW) scp -P $(PORT) jacobiseq Makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+	sshpass -p $(PSSW) scp -P $(PORT) jacobiseq makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
 
 .PHONY: send_par
 send_par:
-	sshpass -p $(PSSW) scp -P $(PORT) jacobipar Makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/

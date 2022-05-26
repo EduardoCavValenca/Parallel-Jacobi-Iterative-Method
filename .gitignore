@@ -51,9 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Adding password file
-*.txt
-
 # Vscode files
 .Vscode
 .idea

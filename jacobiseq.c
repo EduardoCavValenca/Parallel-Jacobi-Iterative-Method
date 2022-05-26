@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <float.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,7 +18,6 @@ void delete_vector(double* vector);
 void print_vector(double* vector, int length);
 void initial_approximation(double* vec_solution, int length);
 void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int length);
-bool check_if_possible(double** matrix_A, int length);
 
 
 typedef struct {
@@ -32,7 +30,7 @@ typedef struct {
     double start_iteration;
     double end_iteration;
 
-}tempo;
+}time;
 
 int main (int argv, char **argc) {
 
@@ -44,23 +42,14 @@ int main (int argv, char **argc) {
     
     int N;
     N = atoi(argc[1]);
-    
-    /*
-    int N;
-    printf("Digite o tamanho da matrix: \n");
-    scanf("%d", &N); //Size of matrix
 
-    int T;
-    printf("Digite o numero de threads: \n");
-    scanf("%d", &T); //Size of matrix
-    */
    
     //Creating the matrix and vectors
     double ** matrix_A = create_matrix(N,N);
     double * vec_B = create_vector(N);
     double * vec_solution = create_vector(N);
 
-    tempo times; //Struct to save time taken at each step
+    time times; //Struct to save time taken at each step
 
    // tempo = calloc(siez)
 
@@ -69,12 +58,6 @@ int main (int argv, char **argc) {
     times.start_matrix = omp_get_wtime();
     populate_matrix(matrix_A, 100, RANGE, N, N); //Pseudorandom number generation
     times.end_matrix = omp_get_wtime();
-
-    //Talvez retirar ???!?!?!!?
-    if(!check_if_possible(matrix_A,N)){
-        printf("Method is not aplicable for this seed\n\n"); //Aii != 0  , Aii > sum(rest_of_line)
-        return 0;
-    }
 
     //Pseudorandom number generation
     populate_vector(vec_B, 100, RANGE, N);
@@ -292,27 +275,4 @@ void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N
     }
     printf("\n\n");
 
-}
-
-bool check_if_possible(double** matrix_A, int N){
-    //Check if solution is able to converge with Jacobi method
-
-    int i,j;
-
-    double sum;
-
-
-    for (i = 0; i < N; i++){
-        sum = 0;
-        for (j = 0; j < N; j++){
-            if (i != j)
-                sum += fabs(matrix_A[i][j]);
-        }
-
-        //If the sum of all others values is grater than the diagonal value, is invalid
-        if (sum >= matrix_A[i][i] || matrix_A[i][i] == 0) //Aii != 0  , Aii > sum(rest_of_line)
-            return false;
-    }
-
-    return true;
 }

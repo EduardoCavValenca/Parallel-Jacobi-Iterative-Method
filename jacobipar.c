@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <float.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,7 +18,6 @@ void delete_vector(double* vector);
 void print_vector(double* vector, int N);
 void initial_approximation(double* vec_solution, int N);
 void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N);
-bool check_if_possible(double** matrix_A, int N);
 
 
 typedef struct {
@@ -32,7 +30,7 @@ typedef struct {
     double start_iteration;
     double end_iteration;
 
-}tempo;
+}time;
 
 
 int main (int argv, char **argc) {
@@ -46,35 +44,19 @@ int main (int argv, char **argc) {
     int N, T;
     N = atoi(argc[1]);
     T = atoi(argc[2]);
-
-    /*
-    int N;
-    printf("Digite o tamanho da matrix: \n");
-    scanf("%d", &N); //Size of matrix
-
-    int T;
-    printf("Digite o numero de threads: \n");
-    scanf("%d", &T); //Size of matrix
-    */
    
     //Creating the matrix and vectors
     double ** matrix_A = create_matrix(N,N);
     double * vec_B = create_vector(N);
     double * vec_solution = create_vector(N);
 
-    tempo times; //Struct to save time taken at each step
+    time times; //Struct to save time taken at each step
 
     times.start_total = omp_get_wtime(); //Start Timer of total runtime (Colocar antes da alocacao ????)
 
     times.start_matrix = omp_get_wtime();
     populate_matrix(matrix_A, 100, RANGE, N, N); //Pseudorandom number generation
     times.end_matrix = omp_get_wtime();
-
-    //Talvez retirar ???!?!?!!?
-    if(!check_if_possible(matrix_A,N)){
-        printf("Method is not aplicable for this seed\n\n"); //Aii != 0  , Aii > sum(rest_of_line)
-        return 0;
-    }
 
     //Pseudorandom number generation
     populate_vector(vec_B, 100, RANGE, N);
@@ -101,7 +83,7 @@ int main (int argv, char **argc) {
 
     //Variables to iterate
     double max_diff = DBL_MAX;
-    int i,j = 0;
+    int i,j;
     double soma;
     double sum[N]; //Get line sum of Ax excluding Aii
     double change[N]; //Diference between value of past and new generation, stop condition
@@ -111,7 +93,7 @@ int main (int argv, char **argc) {
     for(iteration_counter = 0; max_diff >= TOLERANCE; iteration_counter++){
 
         //For each line
-        #pragma omp parallel for firstprivate(soma,j) num_threads(T) schedule(dynamic,1)
+        #pragma omp parallel for private(soma,j) num_threads(T) schedule(dynamic,1)
         for(i=0; i < N; i++){ 
             
             soma = 0;
@@ -142,7 +124,7 @@ int main (int argv, char **argc) {
         
         max_diff = 0; //Maximum change of this iteration
 
-        #pragma omp parallel for reduction(max : max_diff)
+        #pragma omp parallel for reduction(max : max_diff) num_threads(T)
         for(i= 0 ; i < N ; i++) 
             max_diff = fmax(max_diff, change[i]);
     }
@@ -292,27 +274,4 @@ void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N
     }
     printf("\n\n");
 
-}
-
-bool check_if_possible(double** matrix_A, int N){
-    //Check if solution is able to converge with Jacobi method
-
-    int i,j;
-
-    double sum;
-
-
-    for (i = 0; i < N; i++){
-        sum = 0;
-        for (j = 0; j < N; j++){
-            if (i != j)
-                sum += fabs(matrix_A[i][j]);
-        }
-
-        //If the sum of all others values is grater than the diagonal value, is invalid
-        if (sum >= matrix_A[i][i] || matrix_A[i][i] == 0) //Aii != 0  , Aii > sum(rest_of_line)
-            return false;
-    }
-
-    return true;
 }
