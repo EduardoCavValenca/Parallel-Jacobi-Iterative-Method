@@ -180,7 +180,6 @@ void populate_matrix(double** matrix, int range, int rows, int cols){
 
 }
 
-
 void recalculate_matrix(double** matrix, int range, int rows, int cols, double *vec_B){
     int i,j;
 
