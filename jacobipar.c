@@ -35,6 +35,9 @@ typedef struct {
 
 int main (int argv, char **argc) {
 
+    time times; //Struct to save time taken at each step
+    times.start_total = omp_get_wtime(); //Start Timer of total runtime
+
     if(argv != 3)
     {
         printf("Starting values are wrong");
@@ -49,10 +52,6 @@ int main (int argv, char **argc) {
     double ** matrix_A = create_matrix(N,N);
     double * vec_B = create_vector(N);
     double * vec_solution = create_vector(N);
-
-    time times; //Struct to save time taken at each step
-
-    times.start_total = omp_get_wtime(); //Start Timer of total runtime (Colocar antes da alocacao ????)
 
     times.start_matrix = omp_get_wtime();
     populate_matrix(matrix_A, 100, RANGE, N, N); //Pseudorandom number generation
@@ -93,7 +92,7 @@ int main (int argv, char **argc) {
     for(iteration_counter = 0; max_diff >= TOLERANCE; iteration_counter++){
 
         //For each line
-        #pragma omp parallel for private(soma,j) num_threads(T) schedule(dynamic,1)
+        #pragma omp parallel for private(soma,j) num_threads(T) //schedule(dynamic,1)
         for(i=0; i < N; i++){ 
             
             soma = 0;
@@ -107,7 +106,7 @@ int main (int argv, char **argc) {
         }
         
         //Applying the Jacobi method
-        //#pragma omp parallel for if(N>100) private(new_value) num_threads(T) schedule(dynamic,1)
+        #pragma omp parallel for if(N>500) private(new_value) num_threads(T)
         for(i= 0 ; i < N ; i++){
             new_value = (vec_B[i] - sum[i])/matrix_A[i][i]; //Jacobi Equation
             change[i] = fabs(vec_solution[i] - new_value);
@@ -141,10 +140,12 @@ int main (int argv, char **argc) {
         verify_method(matrix_A,vec_B,vec_solution, N);
     }
 
-    printf("Time taken build matrix: %lf\n", times.end_matrix - times.start_matrix);
+    // printf("Time taken build matrix: %lf\n", times.end_matrix - times.start_matrix);
+    // printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
+    // printf("Total time: %lf\n",  times.end_total - times.start_total);
+    // printf("Number of Iterations: %d\n\n", iteration_counter);
+
     printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
-    printf("Total time: %lf\n",  times.end_total - times.start_total);
-    printf("Number of Iterations: %d\n\n", iteration_counter);
 
     //Free memory
     delete_matrix(matrix_A,N,N); 
