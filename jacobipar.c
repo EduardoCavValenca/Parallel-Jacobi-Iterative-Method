@@ -29,7 +29,7 @@ double* create_vector(int N);
 void delete_vector(double* vector);
 void print_vector(double* vector, int N);
 void initial_approximation(double* vec_solution, int N);
-void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N);
+void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N, int line);
 
 //Struct of variables to count the time
 typedef struct {
@@ -163,9 +163,6 @@ int main (int argv, char **argc) {
     if(LOG && N <= LOG_MAX){
         printf("\nSolution: (%d iterations)\n",iteration_counter);
         print_vector(vec_solution,N); //Final solution
-
-        printf("Diference from target: \n"); //Diference between Ax and b where (Ax = b)
-        verify_method(matrix_A,vec_B,vec_solution, N);
     }
     
     // printf("Time taken build matrix: %lf\n", times.end_matrix - times.start_matrix);
@@ -174,6 +171,16 @@ int main (int argv, char **argc) {
 
     printf("Number of Iterations: %d\n\n", iteration_counter);
     printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
+
+
+    int search_line = 0;
+    while(search_line < 1 || search_line > N){
+        printf("\nDigite a equacao desejada 1 - N: \n");
+        scanf("%d", &search_line);
+    }
+    verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
+
+
     
     //Free memory
     delete_matrix(matrix_A,N,N); 
@@ -312,24 +319,25 @@ void initial_approximation(double* vec_solution, int N){
 }
 
 
-void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N){
+void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N, int line){
     //Verify difference between expected and founded value.
 
-    int i, j;
+    int j;
     double diff, sum;
 
-    for(i=0; i< N; i++)
-    {
-        sum = 0;
-        for(j=0; j< N; j++){
-            if(i == j) 
-                sum+= vec_solution[j]; //Main diagonal elements aii = 1, but 0 on the matrix
-            else 
-                sum += matrix_A[i][j]*vec_solution[j];
-        }
-        diff = fabs(sum - vec_B[i]);
-        printf("%lf ", diff);
+    sum = 0;
+    for(j=0; j< N; j++){
+        if(line == j) 
+            sum += vec_solution[j]; //Main diagonal elements aii = 1, but 0 on the matrix
+        else 
+            sum += matrix_A[line][j]*vec_solution[j];
     }
-    printf("\n\n");
+    diff = fabs(sum - vec_B[line]);
+    printf("Valor obtido (Ax): %lf\n", sum);
+    printf("Valor objetivo (b): %lf\n", vec_B[line]);
+    printf("Diferenca: %lf\n", diff);
 
+
+    printf("\n");
+    
 }
