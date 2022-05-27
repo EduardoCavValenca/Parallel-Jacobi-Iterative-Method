@@ -165,7 +165,7 @@ int main (int argv, char **argc) {
 
     int search_line = 0;
     while(search_line < 1 || search_line > N){
-        printf("\nDigite a equacao desejada 1 - N: \n");
+        printf("\nDigite a equacao desejada 1 - N: ");
         scanf("%d", &search_line);
     }
     verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);

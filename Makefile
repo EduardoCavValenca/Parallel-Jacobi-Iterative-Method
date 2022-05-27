@@ -7,9 +7,9 @@
 CC = gcc 
 
 #Flags de compilação
-CFLAGS = -fopenmp -I. -g -Wall -O3 -Ofast -march=native
+CFLAGS = -fopenmp -I. -g -O3 -Ofast -Wno-unused-result -march=native
 
-#Bibliotecas usadas
+#Bibliotecas usadasclea
 LIBS = -lm
 
 #OBJ= arquivos.c main.o
@@ -18,7 +18,7 @@ OBJ_seq = jacobiseq.c
 
 all: 
 	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS); \
-	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS); \
+	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS)
 
 jacobipar: $(OBJ_par)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
