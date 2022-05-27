@@ -78,7 +78,6 @@ int main (int argv, char **argc) {
         printf("Target Vector: \n");
         print_vector(vec_B,N);
     }
-    printf("\n\n VAI PALMERA");
     
     //Starting guess, current 0, 0, 0... 0
     initial_approximation(vec_solution,N); 
@@ -180,8 +179,7 @@ double randomNumber() {
   return (double) rand()/RAND_MAX * 2.0 - 1.0;
 }
 
-void populate_matrix(double** matrix, int range, int rows, int cols)
-{
+void populate_matrix(double** matrix, int range, int rows, int cols){
   
     double line_sum = 0.0;
     double line_coefficient;
@@ -214,8 +212,7 @@ void recalculate_matrix(double** matrix, int range, int rows, int cols, double *
     int i,j;
 
     //Updates matrix values
-    for (i = 0; i < rows ; i++)
-    {
+    for (i = 0; i < rows ; i++){
         for (j = 0; j < cols ; j++){
             if(i != j)
                 matrix[i][j] /=  matrix[i][i];
