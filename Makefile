@@ -17,6 +17,7 @@ OBJ_seq = jacobiseq.c
 all: 
 	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS)
 	@$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS)
+	@sshpass -p $(PSSW) scp -p $(PORT) *.c jacobiseq jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
 
 jacobipar: $(OBJ_par)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
