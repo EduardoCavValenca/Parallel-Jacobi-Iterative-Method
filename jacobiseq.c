@@ -1,3 +1,12 @@
+/*
+
+SSC0903 - Grupo 07
+Eduardo Cavalari Valença 11234381
+Che Fan Pan 11200421
+Marcos Vinícius Firmino Pietrucci 10770072
+
+*/
+
 #include <float.h>
 #include <stdlib.h>
 #include <stdio.h>

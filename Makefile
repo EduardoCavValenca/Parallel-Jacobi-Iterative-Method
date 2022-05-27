@@ -1,3 +1,8 @@
+#SSC0903 - Grupo 07
+# Eduardo Cavalari Valença 11234381
+# Che Fan Pan 11200421
+# Marcos Vinícius Firmino Pietrucci 10770072
+
 #Compilador
 CC = gcc 
 
@@ -6,9 +11,6 @@ CFLAGS = -fopenmp -I. -g -Wall -O3 -Ofast -march=native
 
 #Bibliotecas usadas
 LIBS = -lm
-
-#Cabeçalhos
-#DEPS=
 
 #OBJ= arquivos.c main.o
 OBJ_par = jacobipar.c
@@ -35,42 +37,3 @@ run_jacobipar:
 
 clean:
 	@rm -f *.o jacobiseq jacobipar
-
-debug:
-	gdb ./jacobiseq
-
-#Configurate connection to server
-USER = ssc903-ta-g07
-PORT = 2210
-LASDPC_IP=andromeda.lasdpc.icmc.usp.br
-ARQ := password.txt
-PSSW := $(shell cat ${ARQ})
-
-.PHONY: connect
-connect:
-	sshpass -p $(PSSW) ssh $(USER)@$(LASDPC_IP) -p $(PORT)
-
-.PHONY: send_all
-send_all:
-	sshpass -p $(PSSW) scp -P $(PORT) jacobipar jacobiseq *.c makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
-
-.PHONY: send_seq
-send_seq:
-	sshpass -p $(PSSW) scp -P $(PORT) jacobiseq makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
-
-.PHONY: send_par
-send_par:
-	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
-
-.PHONY: send_bench
-send_bench:
-	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
-
-
-.PHONY: download_files
-download_files:
-	sshpass -p $(PSSW) scp -P $(PORT) $(USER)@$(LASDPC_IP):/home/$(USER)/data/* ./
-
-
-
-
