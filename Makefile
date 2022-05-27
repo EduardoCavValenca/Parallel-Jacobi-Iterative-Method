@@ -15,9 +15,8 @@ OBJ_par = jacobipar.c
 OBJ_seq = jacobiseq.c
 
 all: 
-	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS)
-	@$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS)
-    @sshpass -p $(PSSW) scp -p $(PORT) *.c jacobiseq jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS); \
+	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS); \
 
 jacobipar: $(OBJ_par)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
@@ -53,7 +52,7 @@ connect:
 
 .PHONY: send_all
 send_all:
-	sshpass -p $(PSSW) scp -P $(PORT) *.c makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar jacobiseq *.c makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
 
 .PHONY: send_seq
 send_seq:
@@ -62,3 +61,16 @@ send_seq:
 .PHONY: send_par
 send_par:
 	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+
+.PHONY: send_bench
+send_bench:
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+
+
+.PHONY: download_files
+download_files:
+	sshpass -p $(PSSW) scp -P $(PORT) $(USER)@$(LASDPC_IP):/home/$(USER)/data/* ./
+
+
+
+
