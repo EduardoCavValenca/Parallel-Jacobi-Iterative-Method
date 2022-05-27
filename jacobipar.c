@@ -8,8 +8,9 @@
 #define TOLERANCE 1e-5
 #define LOG 1
 
-void populate_matrix(double** matrix, unsigned int seed, int range, int rows, int cols );
-void populate_vector(double* vector, unsigned int seed, int range, int N);
+void populate_matrix(double** matrix, int range, int rows, int cols);
+void recalculate_matrix(double** matrix, int range, int rows, int cols, double *vec_B);
+void populate_vector(double* vector, int range, int N);
 double** create_matrix(int rows, int cols);
 void delete_matrix(double** matrix, int rows, int cols);
 void print_matrix(double** matrix, int rows, int cols);
@@ -53,12 +54,17 @@ int main (int argv, char **argc) {
     double * vec_B = create_vector(N);
     double * vec_solution = create_vector(N);
 
-    times.start_matrix = omp_get_wtime();
-    populate_matrix(matrix_A, 100, RANGE, N, N); //Pseudorandom number generation
-    times.end_matrix = omp_get_wtime();
+    srand(100); //Define seed
 
     //Pseudorandom number generation
-    populate_vector(vec_B, 100, RANGE, N);
+    populate_vector(vec_B, RANGE, N);
+
+    times.start_matrix = omp_get_wtime();
+    populate_matrix(matrix_A, RANGE, N, N); //Pseudorandom number generation
+    times.end_matrix = omp_get_wtime();
+
+    recalculate_matrix(matrix_A, RANGE, N, N, vec_B);
+   
 
     /*Presenting initial values*/
     if(LOG && N <= 10){
@@ -108,7 +114,7 @@ int main (int argv, char **argc) {
         //Applying the Jacobi method
         #pragma omp parallel for if(N>500) private(new_value) num_threads(T)
         for(i= 0 ; i < N ; i++){
-            new_value = (vec_B[i] - sum[i])/matrix_A[i][i]; //Jacobi Equation
+            new_value = (vec_B[i] - sum[i]);///matrix_A[i][i]; //Jacobi Equation
             change[i] = fabs(vec_solution[i] - new_value);
             vec_solution[i] = new_value; //updates value
         }
@@ -156,9 +162,8 @@ int main (int argv, char **argc) {
 }
 
 
-void populate_matrix(double** matrix, unsigned int seed, int range, int rows, int cols ){
-    srand(seed); //Define seed
-
+void populate_matrix(double** matrix, int range, int rows, int cols){
+  
     int i,j;
     double line_sum;
 
@@ -166,21 +171,37 @@ void populate_matrix(double** matrix, unsigned int seed, int range, int rows, in
         line_sum = 0;
         for (j = 0; j < cols ; j++){
             if(i != j){
-                matrix[i][j] = (double)rand()/(double)(RAND_MAX/range); //random floating numbers between 0 and range
+                matrix[i][j] = (double) (rand()%range); //random floating numbers between 0 and range
                 line_sum += fabs(matrix[i][j]);
             }
         }
-        matrix[i][i] = line_sum + (double)rand()/(double)(RAND_MAX/range); //Converging requirement
+        matrix[i][i] = line_sum + (double) (rand()%range); //Converging requirement
+    }
+
+}
+
+
+void recalculate_matrix(double** matrix, int range, int rows, int cols, double *vec_B){
+    int i,j;
+
+    //Updates matrix values
+    for (i = 0; i < rows ; i++){
+        for (j = 0; j < cols ; j++){
+            if(i != j)
+                matrix[i][j] /=  matrix[i][i];
+        }
+        vec_B[i] /=  matrix[i][i];
+        matrix[i][i] = 0;
     }
 }
 
 
-void populate_vector(double* vector, unsigned int seed, int range, int N){
+void populate_vector(double* vector, int range, int N){
 
     int i;
 
     for (i = 0; i < N ; i++)
-        vector[i] = (double)rand()/(double)(RAND_MAX/range); //random floating numbers between 0 and range
+        vector[i] = (double) (rand()%range); //random floating numbers between 0 and range
 }
 
 
