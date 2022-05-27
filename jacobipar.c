@@ -93,7 +93,7 @@ int main (int argv, char **argc) {
     for(iteration_counter = 0; max_diff >= TOLERANCE; iteration_counter++){
 
         //For each line
-        #pragma omp parallel for private(soma,j) num_threads(T) schedule(dynamic,1)
+        #pragma omp parallel for private(soma,j) num_threads(T) //schedule(dynamic,1)
         for(i=0; i < N; i++){ 
             
             soma = 0;
@@ -107,7 +107,7 @@ int main (int argv, char **argc) {
         }
         
         //Applying the Jacobi method
-        //#pragma omp parallel for if(N>100) private(new_value) num_threads(T) schedule(dynamic,1)
+        #pragma omp parallel for if(N>500) private(new_value) num_threads(T)
         for(i= 0 ; i < N ; i++){
             new_value = (vec_B[i] - sum[i])/matrix_A[i][i]; //Jacobi Equation
             change[i] = fabs(vec_solution[i] - new_value);
