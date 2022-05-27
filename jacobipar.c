@@ -78,7 +78,8 @@ int main (int argv, char **argc) {
         printf("Target Vector: \n");
         print_vector(vec_B,N);
     }
-
+    printf("\n\n VAI PALMERA");
+    
     //Starting guess, current 0, 0, 0... 0
     initial_approximation(vec_solution,N); 
 
@@ -99,6 +100,8 @@ int main (int argv, char **argc) {
     double sum[N]; //Get line sum of Ax excluding Aii
     double change[N]; //Diference between value of past and new generation, stop condition
     double new_value; //New Xi value
+
+    
 
     //######################### Iterations ###############################
     for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
@@ -145,7 +148,6 @@ int main (int argv, char **argc) {
         }
 
     }
-
     //####################### End of Iterations #############################
     times.end_iteration = omp_get_wtime();
     times.end_total = omp_get_wtime();
@@ -157,19 +159,19 @@ int main (int argv, char **argc) {
         printf("Diference from target: \n"); //Diference between Ax and b where (Ax = b)
         verify_method(matrix_A,vec_B,vec_solution, N);
     }
-
+    
     // printf("Time taken build matrix: %lf\n", times.end_matrix - times.start_matrix);
     // printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
     // printf("Total time: %lf\n",  times.end_total - times.start_total);
 
     printf("Number of Iterations: %d\n\n", iteration_counter);
     printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
-
+    
     //Free memory
     delete_matrix(matrix_A,N,N); 
     delete_vector(vec_B);
     delete_vector(vec_solution);
-
+    
     return 0;
 }
 
@@ -178,7 +180,8 @@ double randomNumber() {
   return (double) rand()/RAND_MAX * 2.0 - 1.0;
 }
 
-void populate_matrix(double** matrix, int range, int rows, int cols){
+void populate_matrix(double** matrix, int range, int rows, int cols)
+{
   
     double line_sum = 0.0;
     double line_coefficient;
@@ -211,7 +214,8 @@ void recalculate_matrix(double** matrix, int range, int rows, int cols, double *
     int i,j;
 
     //Updates matrix values
-    for (i = 0; i < rows ; i++){
+    for (i = 0; i < rows ; i++)
+    {
         for (j = 0; j < cols ; j++){
             if(i != j)
                 matrix[i][j] /=  matrix[i][i];
