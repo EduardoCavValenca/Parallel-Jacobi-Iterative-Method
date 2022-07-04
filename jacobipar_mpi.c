@@ -33,6 +33,7 @@ void initial_approximation(double* vec_solution, int N);
 void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N, int line);
 
 void send_lines(double** matrix, int N, int msgtag, int numprocs);
+void send_vec(double* vector, int N, int msgtag, int numprocs);
 
 //Struct of variables to count the time
 typedef struct {
@@ -136,12 +137,17 @@ int main (int argc, char *argv[]) {
         //Starting the Jacobi method
         times.start_iteration = omp_get_wtime();
 
-        print_matrix(matrix_A,N,N);
+        print_vector(vec_B,N);
 
         //Send dimensions to other process
         msgtag = 0;
         send_lines(matrix_A, N, msgtag, numprocs);
+
         msgtag = 1;
+        send_vec(vec_B, N, msgtag, numprocs);
+
+        msgtag = 2;
+        send_vec(vec_solution, N, msgtag, numprocs);
         
         
     }
@@ -168,10 +174,15 @@ int main (int argc, char *argv[]) {
         //Receive vecB values
         msgtag = 1;
         for (i = 0; i < dimension; i++)
-            MPI_Recv(vec_B[i], 1, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
+            MPI_Recv(&vec_B[i], 1, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
+
+        //Receive solutions values
+        msgtag = 2;
+        for (i = 0; i < dimension; i++)
+            MPI_Recv(&vec_solution[i], 1, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
 
         printf("%d\n", rank);
-        print_matrix(matrix_A,dimension,N);
+        print_vector(vec_solution, dimension);
         printf("\n");
 
 
@@ -288,6 +299,27 @@ int main (int argc, char *argv[]) {
 	return 0;
  
 }
+
+
+void send_vec(double* vector, int N, int msgtag, int numprocs){
+
+    int send_line;
+    int division;
+    int i, dest;
+
+    for (dest = 1; dest < numprocs; dest++){
+            if (dest != numprocs - 1)
+                division = (N / (numprocs - 1));
+            else
+                division = ((N / (numprocs - 1)) + N % (N / (numprocs - 1)));
+
+            for(i = 0; i < division; i++){
+                send_line = ((dest - 1) * (N / (numprocs - 1))) + i;
+                MPI_Send(&vector[send_line], 1 , MPI_DOUBLE, dest, msgtag, MPI_COMM_WORLD);
+            }
+    }
+}
+
 
 void send_lines(double** matrix, int N, int msgtag, int numprocs){
 
