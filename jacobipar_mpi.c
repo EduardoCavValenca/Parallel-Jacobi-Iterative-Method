@@ -12,10 +12,11 @@ Marcos Vinícius Firmino Pietrucci 10770072
 #include <stdio.h>
 #include <math.h>
 #include <omp.h>
+#include <mpi.h>
 
 #define RANGE 10
 #define TOLERANCE 1e-7
-#define LOG 1
+#define LOG 0
 #define LOG_MAX 10
 #define SEED 10
 
@@ -31,6 +32,8 @@ void print_vector(double* vector, int N);
 void initial_approximation(double* vec_solution, int N);
 void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N, int line);
 
+void send_lines(double** matrix, int N, int msgtag, int numprocs);
+
 //Struct of variables to count the time
 typedef struct {
     double start_total;
@@ -45,59 +48,153 @@ typedef struct {
 }time;
 
 
-int main (int argv, char **argc) {
+int main (int argc, char *argv[]) {
+
+    double test; //retirar
+    int i,j;
+
+
+    int numprocs, rank, namelen;
+	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	int provided;
+
+    MPI_Status status;
+	MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided);
+	MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Get_processor_name(processor_name, &namelen);
+
+    int *bufrecv, *bufsend;
+
+    int src, dest;
+    int msgtag;
+
+    //Rank 0 variables
+    int iteration_counter;
+    int send_div, send_dim;
+
+    //Other rank variables
+    int dimension;
+
 
     time times; //Struct to save time taken at each step
     times.start_total = omp_get_wtime(); //Start Timer of total runtime
 
     //Check if input is correct
-    if(argv != 3)
-    {
-        printf("Starting values are wrong");
-        exit(0);
-    }
+
+    // if(argv != 3)
+    // {
+    //     printf("Starting values are wrong");
+    //     exit(0);
+    // }
     
     int N, T;
-    N = atoi(argc[1]); //Size of matrix
-    T = atoi(argc[2]); //Number of threads
+    // N = atoi(argc[1]); //Size of matrix
+    // T = atoi(argc[2]); //Number of threads
+
+    N = 10;
+    T = 2;
    
     //Creating the matrix and vectors
     double ** matrix_A = create_matrix(N,N);
     double * vec_B = create_vector(N);
     double * vec_solution = create_vector(N);
 
-    srand(SEED); //Define seed
+    if (rank == 0) {
 
-    //Pseudorandom number generation for vector B
-    populate_vector(vec_B, RANGE, N);
+        matrix_A = create_matrix(N,N);
+        vec_B = create_vector(N);
+        vec_solution = create_vector(N);
 
-    times.start_matrix = omp_get_wtime();
-    populate_matrix(matrix_A, RANGE, N, N); //Pseudorandom number generation for matrix A
-    times.end_matrix = omp_get_wtime();
+        srand(SEED); //Define seed
 
-    //Divide by matrix_A and vec_B by main diagonal elements, and zero them
-    recalculate_matrix(matrix_A, RANGE, N, N, vec_B); 
-   
+        //Pseudorandom number generation for vector B
+        populate_vector(vec_B, RANGE, N);
 
-    /*Presenting initial values*/
-    if(LOG && N <= LOG_MAX){
-        printf("Matrix: \n");
-        print_matrix(matrix_A,N,N);
+        times.start_matrix = omp_get_wtime();
+        populate_matrix(matrix_A, RANGE, N, N); //Pseudorandom number generation for matrix A
+        times.end_matrix = omp_get_wtime();
 
-        printf("Target Vector: \n");
-        print_vector(vec_B,N);
-    }
-    
-    //Starting guess, current 0, 0, 0... 0
-    initial_approximation(vec_solution,N); 
+        //Divide by matrix_A and vec_B by main diagonal elements, and zero them
+        recalculate_matrix(matrix_A, RANGE, N, N, vec_B); 
 
-    if(LOG && N <= LOG_MAX)
+        //Starting guess, current 0, 0, 0... 0
+        initial_approximation(vec_solution,N); 
+
+        /*Presenting initial values*/
+        if (LOG && N <= LOG_MAX){
+            printf("Matrix: \n");
+            print_matrix(matrix_A,N,N);
+
+            printf("Target Vector: \n");
+            print_vector(vec_B,N);
+        }
+
+        if(LOG && N <= LOG_MAX)
         printf("Solution (Current - Difference): \n");
     
-    //Starting the Jacobi method
-    int iteration_counter;
+        //Starting the Jacobi method
+        times.start_iteration = omp_get_wtime();
 
-    times.start_iteration = omp_get_wtime();
+        print_matrix(matrix_A,N,N);
+
+        //Send dimensions to other process
+        msgtag = 0;
+        send_lines(matrix_A, N, msgtag, numprocs);
+        msgtag = 1;
+        
+        
+    }
+
+    else {
+        
+        src = 0; //Main process
+        dest = 0;
+
+        if (rank != numprocs - 1)
+            dimension = (N / (numprocs - 1));
+        else
+            dimension = (N / (numprocs - 1)) + N % (N / (numprocs - 1));
+
+        matrix_A = create_matrix(dimension,N);
+        vec_B = create_vector(dimension);
+        vec_solution = create_vector(dimension);
+
+        //Receive matrix lines
+        msgtag = 0;
+        for (i = 0; i < dimension; i++)
+            MPI_Recv(matrix_A[i], N, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
+
+        //Receive vecB values
+        msgtag = 1;
+        for (i = 0; i < dimension; i++)
+            MPI_Recv(vec_B[i], 1, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
+
+        printf("%d\n", rank);
+        print_matrix(matrix_A,dimension,N);
+        printf("\n");
+
+
+        // MPI_Recv(matrix_A, dimension * N, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
+        // print_matrix(matrix_A,dimension,N);
+        
+        // msgtag = 1;
+        // MPI_Recv(vec_B, dimension, MPI_INT, src, msgtag, MPI_COMM_WORLD, &status);
+        // msgtag = 2;
+        // MPI_Recv(vec_solution, dimension, MPI_INT, src, msgtag, MPI_COMM_WORLD, &status);
+
+
+      
+    }
+
+   
+   
+
+  
+    
+    
+
+ /*   
 
     //Variables to iterate
     double max_diff; //Max diff between x(k) and x(k+1)
@@ -180,14 +277,35 @@ int main (int argv, char **argc) {
     }
     verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
 
-
+    */
     
     //Free memory
-    delete_matrix(matrix_A,N,N); 
-    delete_vector(vec_B);
-    delete_vector(vec_solution);
-    
-    return 0;
+    // delete_matrix(matrix_A,N,N); 
+    // delete_vector(vec_B);
+    // delete_vector(vec_solution);
+
+	MPI_Finalize();
+	return 0;
+ 
+}
+
+void send_lines(double** matrix, int N, int msgtag, int numprocs){
+
+    int send_line;
+    int division;
+    int i, dest;
+
+    for (dest = 1; dest < numprocs; dest++){
+            if (dest != numprocs - 1)
+                division = (N / (numprocs - 1));
+            else
+                division = ((N / (numprocs - 1)) + N % (N / (numprocs - 1)));
+
+            for(i = 0; i < division; i++){
+                send_line = ((dest - 1) * (N / (numprocs - 1))) + i;
+                MPI_Send(matrix[send_line], N , MPI_DOUBLE, dest, msgtag, MPI_COMM_WORLD);
+            }
+    }
 }
 
 //Generate random double number between -1 and 1
