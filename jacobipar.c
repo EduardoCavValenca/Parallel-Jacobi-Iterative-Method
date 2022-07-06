@@ -179,8 +179,6 @@ int main (int argv, char **argc) {
         scanf("%d", &search_line);
     }
     verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
-
-
     
     //Free memory
     delete_matrix(matrix_A,N,N); 

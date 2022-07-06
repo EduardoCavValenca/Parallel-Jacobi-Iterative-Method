@@ -51,10 +51,6 @@ typedef struct {
 
 int main (int argc, char *argv[]) {
 
-    double test; //retirar
-    int i,j;
-
-
     int numprocs, rank, namelen;
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int provided;
@@ -73,9 +69,19 @@ int main (int argc, char *argv[]) {
     //Rank 0 variables
     int iteration_counter;
     int send_div, send_dim;
+    int main_stop_condition;
 
     //Other rank variables
     int dimension;
+    double max_diff; //Max diff between x(k) and x(k+1)
+    double max_vec; //Max value of x_i
+    double stop_condition = DBL_MAX; //Tolerance
+    int i,j;
+    double soma;
+    double* sum; //Get line sum of Ax excluding Aii
+    double* change; //Diference between value of past and new generation, stop condition
+    double new_value; //New Xi value
+    int distance_from_zero;
 
 
     time times; //Struct to save time taken at each step
@@ -100,6 +106,7 @@ int main (int argc, char *argv[]) {
     double ** matrix_A = create_matrix(N,N);
     double * vec_B = create_vector(N);
     double * vec_solution = create_vector(N);
+
 
     if (rank == 0) {
 
@@ -137,8 +144,8 @@ int main (int argc, char *argv[]) {
         //Starting the Jacobi method
         times.start_iteration = omp_get_wtime();
 
-        print_vector(vec_B,N);
 
+        dimension = (N / (numprocs)); //Defini dimension of process 0
         //Send dimensions to other process
         msgtag = 0;
         send_lines(matrix_A, N, msgtag, numprocs);
@@ -146,9 +153,106 @@ int main (int argc, char *argv[]) {
         msgtag = 1;
         send_vec(vec_B, N, msgtag, numprocs);
 
-        msgtag = 2;
-        send_vec(vec_solution, N, msgtag, numprocs);
+        //send_vec(vec_solution, N, msgtag, numprocs);
+        MPI_Bcast(vec_solution, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+        sum = create_vector(dimension);
+        change = create_vector(dimension);
+
+        int counts[numprocs];
+        int displacements[numprocs];
+
+        for (i = 0; i < numprocs; i++){
+            if (i != numprocs - 1){
+                counts[i] = (N / (numprocs)); //2
+                displacements[i] = counts[i] * i;
+            }
+            else{
+                counts[i] = N - ((N / (numprocs)) * (numprocs - 1));
+                displacements[i] = (N / (numprocs)) * ((numprocs - 1));
+            }
+        }
+
+        distance_from_zero = (N / (numprocs)) * rank;
+
+        MPI_Allgatherv(vec_solution, dimension, MPI_DOUBLE, vec_solution, counts, displacements, MPI_DOUBLE, MPI_COMM_WORLD); 
+
+        print_vector(vec_solution,N);
+
+        //Iterating        
+        //for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
+        for(iteration_counter = 0; iteration_counter < 1; iteration_counter++){
+
+            //For each line
+            #pragma omp parallel for private(soma,j) num_threads(T) //schedule(dynamic,1)
+            for(i=0; i < dimension; i++){ 
+                
+                soma = 0;
+                //For each collum
+                for(j = 0; j < N; j++)
+                        soma += matrix_A[i][j]*vec_solution[j]; //Sum of line
+                sum[i] = soma;
+            }
+
+            //Applying the Jacobi method
+            #pragma omp parallel for if (N > 1000) private(new_value) num_threads(T)
+            for(i= 0 ; i < dimension ; i++){
+                new_value = (vec_B[i] - sum[i]); //Jacobi Equation
+                change[i] = fabs(vec_solution[distance_from_zero + i] - new_value);
+                vec_solution[distance_from_zero + i] = new_value; //Updates value
+            }
+
+            // ----------- Verifying the stop condition ---------------- //
+            
+            max_diff = 0; //Maximum change of this iteration
+            max_vec = 0; //Maximum value of vector of Xi 
+
+            //Get maxs values to check stop condition
+            #pragma omp parallel for reduction(max : max_diff) reduction(max : max_vec) num_threads(T)
+            for(i= 0 ; i < dimension ; i++){
+                max_diff = fmax(max_diff, fabs(change[i]));
+                max_vec = fmax(max_vec, fabs(vec_solution[distance_from_zero + i]));
+            }
+
+            stop_condition = max_diff/max_vec; //Stop condition
+
+            MPI_Allreduce(&stop_condition, &stop_condition, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+            MPI_Allgatherv(vec_solution, dimension, MPI_DOUBLE, vec_solution, counts, displacements, MPI_DOUBLE, MPI_COMM_WORLD); 
+
+            print_vector(vec_solution,N); 
+        }
+
+
+        print_vector(vec_solution,N);
+
+        //####################### End of Iterations #############################
+        times.end_iteration = omp_get_wtime();
+        times.end_total = omp_get_wtime();
+
+        if(LOG && N <= LOG_MAX){
+            printf("\nSolution: (%d iterations)\n",iteration_counter);
+            print_vector(vec_solution,N); //Final solution
+        }
         
+        // printf("Time taken build matrix: %lf\n", times.end_matrix - times.start_matrix);
+        // printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
+        // printf("Total time: %lf\n",  times.end_total - times.start_total);
+
+        printf("Number of Iterations: %d\n\n", iteration_counter);
+        printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
+
+
+        int search_line = 0;
+        while(search_line < 1 || search_line > N){
+            printf("\nDigite a equacao desejada 1 - N: ");
+            fflush(0);
+            scanf("%d", &search_line);
+        }
+        verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
+
+
+
         
     }
 
@@ -158,13 +262,13 @@ int main (int argc, char *argv[]) {
         dest = 0;
 
         if (rank != numprocs - 1)
-            dimension = (N / (numprocs - 1));
+            dimension = (N / (numprocs)); //2
         else
-            dimension = (N / (numprocs - 1)) + N % (N / (numprocs - 1));
+            dimension = N - ((N / (numprocs)) * (numprocs - 1));
 
         matrix_A = create_matrix(dimension,N);
         vec_B = create_vector(dimension);
-        vec_solution = create_vector(dimension);
+        vec_solution = create_vector(N);
 
         //Receive matrix lines
         msgtag = 0;
@@ -173,127 +277,96 @@ int main (int argc, char *argv[]) {
 
         //Receive vecB values
         msgtag = 1;
-        for (i = 0; i < dimension; i++)
-            MPI_Recv(&vec_B[i], 1, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
+        MPI_Recv(vec_B, dimension, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
 
-        //Receive solutions values
-        msgtag = 2;
-        for (i = 0; i < dimension; i++)
-            MPI_Recv(&vec_solution[i], 1, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
+        //Receiving vec_solution
+        MPI_Bcast(vec_solution, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        printf("%d\n", rank);
-        print_vector(vec_solution, dimension);
-        printf("\n");
+        //Alocate variables do iterate
+        sum = create_vector(dimension);
+        change = create_vector(dimension);
 
+        int counts[numprocs];
+        int displacements[numprocs];
 
-        // MPI_Recv(matrix_A, dimension * N, MPI_DOUBLE, src, msgtag, MPI_COMM_WORLD, &status);
-        // print_matrix(matrix_A,dimension,N);
+        for (i = 0; i < numprocs; i++){
+            if (i != numprocs - 1){
+                counts[i] = (N / (numprocs)); //2
+                displacements[i] = counts[i] * i;
+            }
+            else{
+                counts[i] = N - ((N / (numprocs)) * (numprocs - 1));
+                displacements[i] = (N / (numprocs)) * ((numprocs - 1));
+            }
+        }
+
+        distance_from_zero = (N / (numprocs)) * rank;
+
+        if(rank == 1){
+            vec_solution[0] = rank;
+            vec_solution[1] = rank;
+        } 
+        if(rank == 2){
+            vec_solution[0] = rank;
+            vec_solution[1] = rank;
+        } 
+        if(rank == 3){
+            vec_solution[0] = rank;
+            vec_solution[1] = rank;
+            vec_solution[2] = rank;
+            vec_solution[3] = rank;
+        }
+      
+
+        MPI_Allgatherv(vec_solution, dimension, MPI_DOUBLE, vec_solution, counts, displacements, MPI_DOUBLE, MPI_COMM_WORLD); 
+
+        //Iterating        
+        //for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
+        for(iteration_counter = 0; iteration_counter < 1; iteration_counter++){
+
+            //For each line
+            #pragma omp parallel for private(soma,j) num_threads(T) //schedule(dynamic,1)
+            for(i=0; i < dimension; i++){ 
+                
+                soma = 0;
+                //For each collum
+                for(j = 0; j < N; j++)
+                        soma += matrix_A[i][j]*vec_solution[j]; //Sum of line
+                sum[i] = soma;
+            }
+            
+            //Applying the Jacobi method
+            #pragma omp parallel for if(N>1000) private(new_value) num_threads(T)
+            for(i= 0 ; i < dimension ; i++){
+                new_value = (vec_B[i] - sum[i]); //Jacobi Equation
+                change[i] = fabs(vec_solution[distance_from_zero + i] - new_value);
+                vec_solution[distance_from_zero + i] = new_value; //Updates value
+            }
+
+            // ----------- Verifying the stop condition ---------------- //
+            
+            max_diff = 0; //Maximum change of this iteration
+            max_vec = 0; //Maximum value of vector of Xi 
+
+            //Get maxs values to check stop condition
+            #pragma omp parallel for reduction(max : max_diff) reduction(max : max_vec) num_threads(T)
+            for(i = 0 ; i < dimension ; i++){
+                max_diff = fmax(max_diff, fabs(change[i]));
+                max_vec = fmax(max_vec, fabs(vec_solution[distance_from_zero + i]));
+            }
+
+            stop_condition = max_diff/max_vec; //Stop condition
+
+            MPI_Allreduce(&stop_condition, &stop_condition, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+            print_vector(vec_solution,N);
+            MPI_Allgatherv(vec_solution, dimension, MPI_DOUBLE, vec_solution, counts, displacements, MPI_DOUBLE, MPI_COMM_WORLD); 
+            
+
+        }
         
-        // msgtag = 1;
-        // MPI_Recv(vec_B, dimension, MPI_INT, src, msgtag, MPI_COMM_WORLD, &status);
-        // msgtag = 2;
-        // MPI_Recv(vec_solution, dimension, MPI_INT, src, msgtag, MPI_COMM_WORLD, &status);
-
-
       
     }
-
-   
-   
-
-  
-    
-    
-
- /*   
-
-    //Variables to iterate
-    double max_diff; //Max diff between x(k) and x(k+1)
-    double max_vec; //Max value of x_i
-    double stop_condition = DBL_MAX; //Tolerance
-    int i,j;
-    double soma;
-    double sum[N]; //Get line sum of Ax excluding Aii
-    double change[N]; //Diference between value of past and new generation, stop condition
-    double new_value; //New Xi value
-
-    
-
-    //######################### Iterations ###############################
-    for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
-
-        //For each line
-        #pragma omp parallel for private(soma,j) num_threads(T) //schedule(dynamic,1)
-        for(i=0; i < N; i++){ 
-            
-            soma = 0;
-            //For each collum
-            for(j = 0; j < N; j++)
-                    soma += matrix_A[i][j]*vec_solution[j]; //Sum of line
-            sum[i] = soma;
-        }
-        
-        //Applying the Jacobi method
-        #pragma omp parallel for if(N>1000) private(new_value) num_threads(T)
-        for(i= 0 ; i < N ; i++){
-            new_value = (vec_B[i] - sum[i]); //Jacobi Equation
-            change[i] = fabs(vec_solution[i] - new_value);
-            vec_solution[i] = new_value; //Updates value
-        }
-
-        // ----------- Verifying the stop condition ---------------- //
-        
-        max_diff = 0; //Maximum change of this iteration
-        max_vec = 0; //Maximum value of vector of Xi 
-
-        //Get maxs values to check stop condition
-        #pragma omp parallel for reduction(max : max_diff) reduction(max : max_vec) num_threads(T)
-        for(i= 0 ; i < N ; i++){
-            max_diff = fmax(max_diff, fabs(change[i]));
-            max_vec = fmax(max_vec, fabs(vec_solution[i]));
-        }
-
-        stop_condition = max_diff/max_vec; //Stop condition
-
-        if(LOG && N <= LOG_MAX){
-            for(i= 0 ; i < N ; i++)
-                printf("%lf-%lf   ",vec_solution[i],change[i]);
-
-            printf("stop: %lf", stop_condition);
-            printf("\n");
-        }
-
-    }
-    //####################### End of Iterations #############################
-    times.end_iteration = omp_get_wtime();
-    times.end_total = omp_get_wtime();
-
-    if(LOG && N <= LOG_MAX){
-        printf("\nSolution: (%d iterations)\n",iteration_counter);
-        print_vector(vec_solution,N); //Final solution
-    }
-    
-    // printf("Time taken build matrix: %lf\n", times.end_matrix - times.start_matrix);
-    // printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
-    // printf("Total time: %lf\n",  times.end_total - times.start_total);
-
-    printf("Number of Iterations: %d\n\n", iteration_counter);
-    printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
-
-
-    int search_line = 0;
-    while(search_line < 1 || search_line > N){
-        printf("\nDigite a equacao desejada 1 - N: ");
-        scanf("%d", &search_line);
-    }
-    verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
-
-    */
-    
-    //Free memory
-    // delete_matrix(matrix_A,N,N); 
-    // delete_vector(vec_B);
-    // delete_vector(vec_solution);
 
 	MPI_Finalize();
 	return 0;
@@ -309,14 +382,14 @@ void send_vec(double* vector, int N, int msgtag, int numprocs){
 
     for (dest = 1; dest < numprocs; dest++){
             if (dest != numprocs - 1)
-                division = (N / (numprocs - 1));
+                division = (N / (numprocs));
             else
-                division = ((N / (numprocs - 1)) + N % (N / (numprocs - 1)));
+                division = N - ((N / (numprocs)) * (numprocs - 1));
 
-            for(i = 0; i < division; i++){
-                send_line = ((dest - 1) * (N / (numprocs - 1))) + i;
-                MPI_Send(&vector[send_line], 1 , MPI_DOUBLE, dest, msgtag, MPI_COMM_WORLD);
-            }
+            // for(i = 0; i < division; i++){
+            //     send_line = ((dest) * (N / (numprocs - 1))) + i;
+                MPI_Send(vector + (dest * (N / (numprocs))), division , MPI_DOUBLE, dest, msgtag, MPI_COMM_WORLD);
+            //}
     }
 }
 
@@ -329,12 +402,12 @@ void send_lines(double** matrix, int N, int msgtag, int numprocs){
 
     for (dest = 1; dest < numprocs; dest++){
             if (dest != numprocs - 1)
-                division = (N / (numprocs - 1));
+                division = (N / (numprocs));
             else
-                division = ((N / (numprocs - 1)) + N % (N / (numprocs - 1)));
+                division = N - ((N / (numprocs)) * (numprocs - 1));
 
             for(i = 0; i < division; i++){
-                send_line = ((dest - 1) * (N / (numprocs - 1))) + i;
+                send_line = ((dest) * (N / (numprocs))) + i;
                 MPI_Send(matrix[send_line], N , MPI_DOUBLE, dest, msgtag, MPI_COMM_WORLD);
             }
     }
