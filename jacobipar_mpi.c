@@ -99,7 +99,6 @@ int main (int argc, char *argv[]) {
     int i,j;
     time times;             //Struct to save time taken at each step
     
-
     //Check if input is correct
 
     // if(argv != 3)
@@ -108,15 +107,12 @@ int main (int argc, char *argv[]) {
     //     exit(0);
     // }
     
-    
     // N = atoi(argc[1]); //Size of matrix
     // T = atoi(argc[2]); //Number of threads
 
     N = 10000;
     T = 2;
    
-
-
 
     if (rank == 0) {
 
@@ -166,7 +162,6 @@ int main (int argc, char *argv[]) {
         times.start_iteration = omp_get_wtime();
 
         //Iterating        
-        //for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
         for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
 
             //For each line
@@ -228,14 +223,20 @@ int main (int argc, char *argv[]) {
 
     else {
         
-        src = 0; //Main process
+        //Main process
+        src = 0; 
         dest = 0;
 
+        //Number of lines of certain process
         if (rank != numprocs - 1)
             dimension = (N / (numprocs)); //2
         else
             dimension = N - ((N / (numprocs)) * (numprocs - 1));
 
+        //vector right index for certain process
+        distance_from_zero = (N / (numprocs)) * rank; 
+
+        //Alocate the matrix and vectors memory
         matrix_A = create_matrix(dimension,N);
         vec_B = create_vector(dimension);
         vec_solution = create_vector(N);
@@ -252,28 +253,16 @@ int main (int argc, char *argv[]) {
         //Receiving vec_solution
         MPI_Bcast(vec_solution, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-        //Alocate variables do iterate
+        //Distribution variables for allgatherv use
+        counts = create_int_vector(numprocs);
+        displacements = create_int_vector(numprocs);
+        set_Allgatherv_parameters(counts, displacements, N, numprocs);
+
+        //Vectors to save current iteration results
         sum = create_vector(dimension);
-        change = create_vector(dimension);
-
-        int counts[numprocs];
-        int displacements[numprocs];
-
-        for (i = 0; i < numprocs; i++){
-            if (i != numprocs - 1){
-                counts[i] = (N / (numprocs)); //2
-                displacements[i] = counts[i] * i;
-            }
-            else{
-                counts[i] = N - ((N / (numprocs)) * (numprocs - 1));
-                displacements[i] = (N / (numprocs)) * ((numprocs - 1));
-            }
-        }
-
-        distance_from_zero = (N / (numprocs)) * rank;
+        change = create_vector(dimension);        
 
         //Iterating        
-        //for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
         for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
 
             //For each line
@@ -286,9 +275,9 @@ int main (int argc, char *argv[]) {
                         local_sum += matrix_A[i][j]*vec_solution[j]; //Sum of line
                 sum[i] = local_sum;
             }
-            
+
             //Applying the Jacobi method
-            #pragma omp parallel for if(N>1000) private(new_value) num_threads(T)
+            #pragma omp parallel for if (N > 1000) private(new_value) num_threads(T)
             for(i= 0 ; i < dimension ; i++){
                 new_value = (vec_B[i] - sum[i]); //Jacobi Equation
                 change[i] = fabs(vec_solution[distance_from_zero + i] - new_value);
@@ -302,19 +291,19 @@ int main (int argc, char *argv[]) {
 
             //Get maxs values to check stop condition
             #pragma omp parallel for reduction(max : max_diff) reduction(max : max_vec) num_threads(T)
-            for(i = 0 ; i < dimension ; i++){
+            for(i= 0 ; i < dimension ; i++){
                 max_diff = fmax(max_diff, fabs(change[i]));
                 max_vec = fmax(max_vec, fabs(vec_solution[distance_from_zero + i]));
             }
 
             stop_condition = max_diff/max_vec; //Stop condition
 
+            //Get max stop_condition of all process
             MPI_Allreduce(&stop_condition, &stop_condition, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 
+            //Update vec_solution with values of all process
             MPI_Allgatherv(&vec_solution[distance_from_zero], dimension, MPI_DOUBLE, vec_solution, counts, displacements, MPI_DOUBLE, MPI_COMM_WORLD); 
-
         }
-        
       
     }
 
@@ -325,6 +314,7 @@ int main (int argc, char *argv[]) {
 
 
 
+//Distribution variables for allgatherv use
 void set_Allgatherv_parameters (int* counts, int* displacements, int N ,int numprocs){
 
     int i;
@@ -341,6 +331,8 @@ void set_Allgatherv_parameters (int* counts, int* displacements, int N ,int nump
     }
 }
 
+
+//Send vector parts for each process
 void send_vec(double* vector, int N, int msgtag, int numprocs){
 
     int send_line;
@@ -353,14 +345,12 @@ void send_vec(double* vector, int N, int msgtag, int numprocs){
             else
                 division = N - ((N / (numprocs)) * (numprocs - 1));
 
-            // for(i = 0; i < division; i++){
-            //     send_line = ((dest) * (N / (numprocs - 1))) + i;
-                MPI_Send(vector + (dest * (N / (numprocs))), division , MPI_DOUBLE, dest, msgtag, MPI_COMM_WORLD);
-            //}
+            MPI_Send(vector + (dest * (N / (numprocs))), division , MPI_DOUBLE, dest, msgtag, MPI_COMM_WORLD);
+            
     }
 }
 
-
+//send matrix lines for each process
 void send_lines(double** matrix, int N, int msgtag, int numprocs){
 
     int send_line;
