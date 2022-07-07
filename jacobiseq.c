@@ -161,8 +161,8 @@ int main (int argv, char **argc) {
     // printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
     // printf("Total time: %lf\n",  times.end_total - times.start_total);
 
-    printf("Number of Iterations: %d\n\n", iteration_counter);
-    printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
+    //printf("Number of Iterations: %d\n\n", iteration_counter);
+    printf("%lf\n",  times.end_iteration - times.start_iteration);
 
     if (QUESTION) {
         int search_line = 0;

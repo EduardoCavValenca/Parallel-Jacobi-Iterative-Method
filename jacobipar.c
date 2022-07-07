@@ -200,8 +200,8 @@ int main (int argc, char *argv[]) {
         //####################### End of Iterations #############################
         times.end_iteration = omp_get_wtime();
 
-        printf("Number of Iterations: %d\n\n", iteration_counter);
-        printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
+        //printf("Number of Iterations: %d\n\n", iteration_counter);
+        printf("%lf\n",  times.end_iteration - times.start_iteration);
 
         if (QUESTION) {
            search_line = 0;

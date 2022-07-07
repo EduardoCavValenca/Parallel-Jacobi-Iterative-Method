@@ -11,14 +11,10 @@ MPRUN = mpirun
 #Flags de compilação
 CFLAGS = -fopenmp -I. -g -Wall -O3 -Ofast -march=native
 
-<<<<<<< HEAD
-#Bibliotecas usadas
-=======
 #jacobipar.c -o jacobipar -fopenmp -lm 
 #mpirun -np 4 jacobipar_mpi 3 2
 
 #Bibliotecas usadasclea
->>>>>>> e42d83038f6e444dbfd3a12f6df4b33102f4b568
 LIBS = -lm
 
 #OBJ= arquivos.c main.o
@@ -26,13 +22,8 @@ OBJ_par = jacobipar.c
 OBJ_seq = jacobiseq.c
 
 all: 
-<<<<<<< HEAD
-	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS); \
-	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS); \
-=======
 	@$(MPI) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS); \
 	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS);
->>>>>>> e42d83038f6e444dbfd3a12f6df4b33102f4b568
 
 jacobipar: $(OBJ_par)
 	$(MPRUN) -np $${PROC} --hostfile halley.txt jacobipar $${SIZE} $${TRED};
@@ -68,14 +59,7 @@ run_cluster:
 	fi
 
 clean:
-<<<<<<< HEAD
-	@rm -f *.o jacobiseq jacobipar
-
-debug:
-	gdb ./jacobiseq
-=======
 	@rm -f *.o jacobiseq jacobipar;
->>>>>>> e42d83038f6e444dbfd3a12f6df4b33102f4b568
 
 #Configurate connection to server
 USER = ssc903-ta-g07
@@ -90,11 +74,7 @@ connect:
 
 .PHONY: send_all
 send_all:
-<<<<<<< HEAD
-	sshpass -p $(PSSW) scp -P $(PORT) jacobipar jacobiseq *.c makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
-=======
-	sshpass -p $(PSSW) scp -P $(PORT) jacobipar jacobiseq *.c *.txt makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
->>>>>>> e42d83038f6e444dbfd3a12f6df4b33102f4b568
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar jacobiseq *.c *.txt *.sh makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
 
 .PHONY: send_seq
 send_seq:
@@ -104,18 +84,6 @@ send_seq:
 send_par:
 	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
 
-<<<<<<< HEAD
-.PHONY: send_bench
-send_bench:
-	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
-
-
-.PHONY: download_files
-download_files:
-	sshpass -p $(PSSW) scp -P $(PORT) $(USER)@$(LASDPC_IP):/home/$(USER)/data/* ./
-
-
-
-
-=======
->>>>>>> e42d83038f6e444dbfd3a12f6df4b33102f4b568
+.PHONY: download
+download:
+	sshpass -p $(PSSW) scp -r -P$(PORT) $(USER)@$(LASDPC_IP):/home/$(USER)/paralelo/ ./
