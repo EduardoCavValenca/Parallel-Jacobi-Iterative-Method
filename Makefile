@@ -26,6 +26,7 @@ all:
 	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS);
 
 jacobipar: $(OBJ_par)
+	$(MPRUN) -np $${PROC} --hostfile halley.txt jacobipar $${SIZE} $${TRED};
 	@$(MPI) -o $@ $^ $(CFLAGS) $(LIBS);
 
 jacobiseq: $(OBJ_seq)
