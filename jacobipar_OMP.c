@@ -18,7 +18,6 @@ Marcos Vinícius Firmino Pietrucci 10770072
 #define LOG 1
 #define LOG_MAX 10
 #define SEED 10
-#define QUESTION 0
 
 void populate_matrix(double** matrix, int range, int rows, int cols);
 void recalculate_matrix(double** matrix, int range, int rows, int cols, double *vec_B);
@@ -26,11 +25,11 @@ void populate_vector(double* vector, int range, int N);
 double** create_matrix(int rows, int cols);
 void delete_matrix(double** matrix, int rows, int cols);
 void print_matrix(double** matrix, int rows, int cols);
-double* create_vector(int length);
+double* create_vector(int N);
 void delete_vector(double* vector);
-void print_vector(double* vector, int length);
-void initial_approximation(double* vec_solution, int length);
-void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int length,int line);
+void print_vector(double* vector, int N);
+void initial_approximation(double* vec_solution, int N);
+void verify_method(double** matrix_A, double* vec_B, double* vec_solution, int N, int line);
 
 //Struct of variables to count the time
 typedef struct {
@@ -45,21 +44,23 @@ typedef struct {
 
 }time;
 
+
 int main (int argv, char **argc) {
 
     time times; //Struct to save time taken at each step
     times.start_total = omp_get_wtime(); //Start Timer of total runtime
 
     //Check if input is correct
-    if(argv != 2)
+    if(argv != 3)
     {
         printf("Starting values are wrong");
         exit(0);
     }
     
-    int N;
+    int N, T;
     N = atoi(argc[1]); //Size of matrix
-
+    T = atoi(argc[2]); //Number of threads
+   
     //Creating the matrix and vectors
     double ** matrix_A = create_matrix(N,N);
     double * vec_B = create_vector(N);
@@ -67,15 +68,16 @@ int main (int argv, char **argc) {
 
     srand(SEED); //Define seed
 
-    //Pseudorandom number generation
+    //Pseudorandom number generation for vector B
     populate_vector(vec_B, RANGE, N);
 
     times.start_matrix = omp_get_wtime();
-    populate_matrix(matrix_A, RANGE, N, N); //Pseudorandom number generation
+    populate_matrix(matrix_A, RANGE, N, N); //Pseudorandom number generation for matrix A
     times.end_matrix = omp_get_wtime();
 
     //Divide by matrix_A and vec_B by main diagonal elements, and zero them
-    recalculate_matrix(matrix_A, RANGE, N, N,vec_B);
+    recalculate_matrix(matrix_A, RANGE, N, N, vec_B); 
+   
 
     /*Presenting initial values*/
     if(LOG && N <= LOG_MAX){
@@ -85,58 +87,63 @@ int main (int argv, char **argc) {
         printf("Target Vector: \n");
         print_vector(vec_B,N);
     }
-
+    
     //Starting guess, current 0, 0, 0... 0
     initial_approximation(vec_solution,N); 
 
     if(LOG && N <= LOG_MAX)
         printf("Solution (Current - Difference): \n");
     
-    //Starting the jacobi method
+    //Starting the Jacobi method
     int iteration_counter;
 
     times.start_iteration = omp_get_wtime();
 
     //Variables to iterate
     double max_diff; //Max diff between x(k) and x(k+1)
-    double max_vec;  //Max value of x_i
+    double max_vec; //Max value of x_i
     double stop_condition = DBL_MAX; //Tolerance
-    int i,j = 0;
+    int i,j;
     double soma;
     double sum[N]; //Get line sum of Ax excluding Aii
     double change[N]; //Diference between value of past and new generation, stop condition
     double new_value; //New Xi value
 
+    
+
     //######################### Iterations ###############################
     for(iteration_counter = 0; stop_condition > TOLERANCE; iteration_counter++){
 
         //For each line
+        #pragma omp parallel for private(soma,j) num_threads(T) //schedule(dynamic,1)
         for(i=0; i < N; i++){ 
             
             soma = 0;
             //For each collum
             for(j = 0; j < N; j++)
-                soma += matrix_A[i][j]*vec_solution[j]; //Sum of line
+                    soma += matrix_A[i][j]*vec_solution[j]; //Sum of line
             sum[i] = soma;
         }
         
         //Applying the Jacobi method
+        #pragma omp parallel for if(N>1000) private(new_value) num_threads(T)
         for(i= 0 ; i < N ; i++){
             new_value = (vec_B[i] - sum[i]); //Jacobi Equation
             change[i] = fabs(vec_solution[i] - new_value);
-            vec_solution[i] = new_value; //updates value
+            vec_solution[i] = new_value; //Updates value
         }
 
-        /* ----------- Verifying the stop condition ---------------- */
+        // ----------- Verifying the stop condition ---------------- //
         
         max_diff = 0; //Maximum change of this iteration
-        max_vec = 0; //Maximum value of vector of Xi
+        max_vec = 0; //Maximum value of vector of Xi 
 
-        for(i= 0 ; i < N ; i++) 
+        //Get maxs values to check stop condition
+        #pragma omp parallel for reduction(max : max_diff) reduction(max : max_vec) num_threads(T)
+        for(i= 0 ; i < N ; i++){
             max_diff = fmax(max_diff, fabs(change[i]));
-
-        for(i= 0 ; i < N ; i++) 
             max_vec = fmax(max_vec, fabs(vec_solution[i]));
+        }
 
         stop_condition = max_diff/max_vec; //Stop condition
 
@@ -147,6 +154,7 @@ int main (int argv, char **argc) {
             printf("stop: %lf", stop_condition);
             printf("\n");
         }
+
     }
     //####################### End of Iterations #############################
     times.end_iteration = omp_get_wtime();
@@ -156,7 +164,7 @@ int main (int argv, char **argc) {
         printf("\nSolution: (%d iterations)\n",iteration_counter);
         print_vector(vec_solution,N); //Final solution
     }
-
+    
     // printf("Time taken build matrix: %lf\n", times.end_matrix - times.start_matrix);
     // printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
     // printf("Total time: %lf\n",  times.end_total - times.start_total);
@@ -164,22 +172,19 @@ int main (int argv, char **argc) {
     printf("Number of Iterations: %d\n\n", iteration_counter);
     printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
 
-    if (QUESTION) {
-        int search_line = 0;
-        while(search_line < 1 || search_line > N){
-            printf("\nDigite a equacao desejada 1 - N: ");
-            fflush(0);
-            scanf("%d", &search_line);
-        }
 
-        verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
+    int search_line = 0;
+    while(search_line < 1 || search_line > N){
+        printf("\nDigite a equacao desejada 1 - N: ");
+        scanf("%d", &search_line);
     }
-
+    verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
+    
     //Free memory
     delete_matrix(matrix_A,N,N); 
     delete_vector(vec_B);
     delete_vector(vec_solution);
-
+    
     return 0;
 }
 
@@ -198,7 +203,7 @@ void populate_matrix(double** matrix, int range, int rows, int cols){
         matrix[i][i] = randomNumber();
 
         line_sum = 0.0;
-
+        
         for (int j = 0; j < cols; j++) {
             if (i != j){
                 matrix[i][j] = randomNumber();
@@ -217,6 +222,7 @@ void populate_matrix(double** matrix, int range, int rows, int cols){
 }
 
 void recalculate_matrix(double** matrix, int range, int rows, int cols, double *vec_B){
+
     int i,j;
 
     //Updates matrix values
@@ -234,15 +240,13 @@ void recalculate_matrix(double** matrix, int range, int rows, int cols, double *
 void populate_vector(double* vector, int range, int N){
 
     int i;
-
     for (i = 0; i < N ; i++)
-        vector[i] = randomNumber(); //random doubles numbers
+        vector[i] = randomNumber(); //Random doubles numbers
 
 }
 
 double** create_matrix(int rows, int cols){
     //Allocate matrix in heap
-
     double** matrix;
     matrix = (double **)malloc(rows * sizeof(double*));
 
@@ -255,8 +259,7 @@ double** create_matrix(int rows, int cols){
 }
 
 void delete_matrix(double** matrix, int rows, int cols){
-    //free matrix memory in heap
-
+    //Free matrix memory in heap
     int i;
     for(i = 0; i < rows; i++) 
         free(matrix[i]);
@@ -278,11 +281,11 @@ void print_matrix(double** matrix, int rows, int cols){
 }
 
 
-double* create_vector(int length){
+double* create_vector(int N){
     //Allocate vector in heap
     
     double* vector;
-    vector = (double *)malloc(length * sizeof(double));   
+    vector = (double *)malloc(N * sizeof(double));   
 
     return vector;
 
@@ -294,17 +297,16 @@ void delete_vector(double* vector){
 }
 
 
-void print_vector(double* vector, int length){
+void print_vector(double* vector, int N){
 
     int i;
 
-    for (i = 0; i < length ; i++)
+    for (i = 0; i < N ; i++)
         printf("%lf ", vector[i]);
 
     printf("\n\n");
     
 }
-
 void initial_approximation(double* vec_solution, int N){
     //Starting guess, current 0, 0, 0... 0 
     int i;
