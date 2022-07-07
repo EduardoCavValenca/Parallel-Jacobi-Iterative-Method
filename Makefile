@@ -7,9 +7,9 @@
 CC = gcc 
 
 #Flags de compilação
-CFLAGS = -fopenmp -I. -g -O3 -Ofast -Wno-unused-result -march=native
+CFLAGS = -fopenmp -I. -g -Wall -O3 -Ofast -march=native
 
-#Bibliotecas usadasclea
+#Bibliotecas usadas
 LIBS = -lm
 
 #OBJ= arquivos.c main.o
@@ -18,7 +18,7 @@ OBJ_seq = jacobiseq.c
 
 all: 
 	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS); \
-	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS)
+	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS); \
 
 jacobipar: $(OBJ_par)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
@@ -37,3 +37,42 @@ run_jacobipar:
 
 clean:
 	@rm -f *.o jacobiseq jacobipar
+
+debug:
+	gdb ./jacobiseq
+
+#Configurate connection to server
+USER = ssc903-ta-g07
+PORT = 2210
+LASDPC_IP=andromeda.lasdpc.icmc.usp.br
+ARQ := password.txt
+PSSW := $(shell cat ${ARQ})
+
+.PHONY: connect
+connect:
+	sshpass -p $(PSSW) ssh $(USER)@$(LASDPC_IP) -p $(PORT)
+
+.PHONY: send_all
+send_all:
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar jacobiseq *.c makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+
+.PHONY: send_seq
+send_seq:
+	sshpass -p $(PSSW) scp -P $(PORT) jacobiseq makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+
+.PHONY: send_par
+send_par:
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+
+.PHONY: send_bench
+send_bench:
+	sshpass -p $(PSSW) scp -P $(PORT) jacobipar makefile $(USER)@$(LASDPC_IP):/home/$(USER)/
+
+
+.PHONY: download_files
+download_files:
+	sshpass -p $(PSSW) scp -P $(PORT) $(USER)@$(LASDPC_IP):/home/$(USER)/data/* ./
+
+
+
+
