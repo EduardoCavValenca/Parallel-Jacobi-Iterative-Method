@@ -217,7 +217,17 @@ int main (int argc, char *argv[]) {
             fflush(0);
             scanf("%d", &search_line);
         }
+
         verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
+
+        //Free memory
+        delete_matrix(matrix_A, N,N);
+        delete_vector(vec_B);
+        delete_vector(vec_solution);
+        delete_vector(sum);
+        delete_vector(change);
+        delete_int_vector(counts);
+        delete_int_vector(displacements);
     
     }
 
@@ -304,8 +314,18 @@ int main (int argc, char *argv[]) {
             //Update vec_solution with values of all process
             MPI_Allgatherv(&vec_solution[distance_from_zero], dimension, MPI_DOUBLE, vec_solution, counts, displacements, MPI_DOUBLE, MPI_COMM_WORLD); 
         }
+
+        //Free memory
+        delete_matrix(matrix_A, dimension,N);
+        delete_vector(vec_B);
+        delete_vector(vec_solution);
+        delete_vector(sum);
+        delete_vector(change);
+        delete_int_vector(counts);
+        delete_int_vector(displacements);
       
     }
+
 
 	MPI_Finalize();
 	return 0;
