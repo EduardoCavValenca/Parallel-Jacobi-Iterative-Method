@@ -19,6 +19,7 @@ Marcos Vinícius Firmino Pietrucci 10770072
 #define LOG 0
 #define LOG_MAX 10
 #define SEED 10
+#define QUESTION 0
 
 //MPI functions
 void send_lines(double** matrix, int N, int msgtag, int numprocs);
@@ -59,9 +60,12 @@ int main (int argc, char *argv[]) {
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int provided;
 
-    printf("%d  -  %s",argc, argv[2]);
+    //Program Variables
+    int N;                  //Matrix size
+    int T;                  //Number of threads
 
-    exit(0);
+    N = atoi(argv[1]);
+    T = atoi(argv[2]);
 
     //Main MPI variables atribution
     MPI_Status status;
@@ -85,8 +89,6 @@ int main (int argc, char *argv[]) {
     int iteration_counter;  //Total iterations
     int dimension;          //Number of lines of certain process
     int distance_from_zero; //vector right index for certain process
-    int N;                  //Matrix size
-    int T;                  //Number of threads
     int search_line;        //Line for method evaluation 
 
     //Iteration variables
@@ -103,21 +105,6 @@ int main (int argc, char *argv[]) {
     int i,j;
     time times;             //Struct to save time taken at each step
     
-    //Check if input is correct
-
-    // if(argv != 3)
-    // {
-    //     printf("Starting values are wrong");
-    //     exit(0);
-    // }
-    
-    // N = atoi(argc[1]); //Size of matrix
-    // T = atoi(argc[2]); //Number of threads
-
-    N = 100;
-    T = 2;
-   
-
     if (rank == 0) {
 
         srand(SEED); //Define seed
@@ -129,6 +116,7 @@ int main (int argc, char *argv[]) {
 
         //Pseudorandom number generation for vector B
         populate_vector(vec_B, RANGE, N);
+
 
         populate_matrix(matrix_A, RANGE, N, N); //Pseudorandom number generation for matrix A
 
@@ -215,15 +203,17 @@ int main (int argc, char *argv[]) {
         printf("Number of Iterations: %d\n\n", iteration_counter);
         printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
 
-        search_line = 0;
-        while(search_line < 1 || search_line > N){
-            printf("\nDigite a equacao desejada 1 - N: ");
-            fflush(0);
-            scanf("%d", &search_line);
+        if (QUESTION) {
+           search_line = 0;
+            while(search_line < 1 || search_line > N){
+                printf("\nDigite a equacao desejada 1 - N: ");
+                fflush(0);
+                scanf("%d", &search_line);
+            }
+
+            verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
         }
-
-        verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
-
+        
         //Free memory
         delete_matrix(matrix_A, N,N);
         delete_vector(vec_B);

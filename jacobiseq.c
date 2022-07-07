@@ -18,6 +18,7 @@ Marcos Vinícius Firmino Pietrucci 10770072
 #define LOG 1
 #define LOG_MAX 10
 #define SEED 10
+#define QUESTION 0
 
 void populate_matrix(double** matrix, int range, int rows, int cols);
 void recalculate_matrix(double** matrix, int range, int rows, int cols, double *vec_B);
@@ -163,12 +164,16 @@ int main (int argv, char **argc) {
     printf("Number of Iterations: %d\n\n", iteration_counter);
     printf("Time taken iterating: %lf\n",  times.end_iteration - times.start_iteration);
 
-    int search_line = 0;
-    while(search_line < 1 || search_line > N){
-        printf("\nDigite a equacao desejada 1 - N: ");
-        scanf("%d", &search_line);
+    if (QUESTION) {
+        int search_line = 0;
+        while(search_line < 1 || search_line > N){
+            printf("\nDigite a equacao desejada 1 - N: ");
+            fflush(0);
+            scanf("%d", &search_line);
+        }
+
+        verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
     }
-    verify_method(matrix_A,vec_B,vec_solution,N,search_line-1);
 
     //Free memory
     delete_matrix(matrix_A,N,N); 
