@@ -4,10 +4,15 @@
 # Marcos Vinícius Firmino Pietrucci 10770072
 
 #Compilador
-CC = gcc 
+GCC = gcc
+MPI = mpicc 
 
 #Flags de compilação
 CFLAGS = -fopenmp -I. -g -O3 -Ofast -Wno-unused-result -march=native
+
+jacobipar.c -o jacobipar -fopenmp -lm 
+
+mpirun -np 4 jacobipar_mpi 3 2
 
 #Bibliotecas usadasclea
 LIBS = -lm
@@ -17,11 +22,11 @@ OBJ_par = jacobipar.c
 OBJ_seq = jacobiseq.c
 
 all: 
-	@$(CC) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS); \
+	$(MPI) -o jacobipar $(OBJ_par) $(CFLAGS) $(LIBS); \
 	$(CC) -o jacobiseq $(OBJ_seq) $(CFLAGS) $(LIBS)
 
 jacobipar: $(OBJ_par)
-	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+	@$(MPI) -o $@ $^ $(CFLAGS) $(LIBS)
 
 jacobiseq: $(OBJ_seq)
 	@$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
@@ -32,8 +37,9 @@ run_jacobiseq:
 
 run_jacobipar:
 	@read -p "Insira a dimensao da matriz N: " SIZE; \
+	read -p "Insira a quantidade de processos P: " PROC;\
 	read -p "Insira a quantidade de threads T: " TRED; \
-	./jacobipar $${SIZE} $${TRED};
+	mpirun -np $${PROC} jacobipar_mpi $${SIZE} $${TRED};
 
 clean:
 	@rm -f *.o jacobiseq jacobipar
