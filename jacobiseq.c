@@ -18,7 +18,7 @@ Marcos Vinícius Firmino Pietrucci 10770072
 #define LOG 1
 #define LOG_MAX 10
 #define SEED 10
-#define QUESTION 0
+#define QUESTION 1
 
 void populate_matrix(double** matrix, int range, int rows, int cols);
 void recalculate_matrix(double** matrix, int range, int rows, int cols, double *vec_B);

@@ -9,10 +9,7 @@ MPI = mpicc
 MPRUN = mpirun
 
 #Flags de compilação
-CFLAGS = -fopenmp -I. -g -Wall -O3 -Ofast -march=native
-
-#jacobipar.c -o jacobipar -fopenmp -lm 
-#mpirun -np 4 jacobipar_mpi 3 2
+CFLAGS = -fopenmp -I. -g -Wall -O3 -Ofast -march=native -Wno-unused-result
 
 #Bibliotecas usadasclea
 LIBS = -lm

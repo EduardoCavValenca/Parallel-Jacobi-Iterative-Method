@@ -19,7 +19,7 @@ Marcos Vinícius Firmino Pietrucci 10770072
 #define LOG 0
 #define LOG_MAX 10
 #define SEED 10
-#define QUESTION 0
+#define QUESTION 1
 
 //MPI functions
 void send_lines(double** matrix, int N, int msgtag, int numprocs);
@@ -75,7 +75,7 @@ int main (int argc, char *argv[]) {
 	MPI_Get_processor_name(processor_name, &namelen);
 
     //MPI needed variables
-    int src, dest;
+    int src;
     int msgtag;
     int* counts;
     int* displacements;
@@ -229,7 +229,6 @@ int main (int argc, char *argv[]) {
         
         //Main process
         src = 0; 
-        dest = 0;
 
         //Number of lines of certain process
         if (rank != numprocs - 1)
@@ -349,9 +348,8 @@ void set_Allgatherv_parameters (int* counts, int* displacements, int N ,int nump
 //Send vector parts for each process
 void send_vec(double* vector, int N, int msgtag, int numprocs){
 
-    int send_line;
     int division;
-    int i, dest;
+    int dest;
 
     for (dest = 1; dest < numprocs; dest++){
             if (dest != numprocs - 1)

@@ -1,0 +1,3 @@
+Para compilar: make
+Para executar jacobiseq: make run_jacobiseq
+Para executar jacobipar: make run_jacobipar

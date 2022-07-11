@@ -6,6 +6,7 @@
         "stdlib.h": "c",
         "jacobi.h": "c",
         "stdbool.h": "c",
-        "jacobiseq.h": "c"
+        "jacobiseq.h": "c",
+        "float.h": "c"
     }
 }
